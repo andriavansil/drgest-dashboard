@@ -1,114 +1,120 @@
+import { role } from "@/lib/data";
+import Link from "next/link";
+import {LayoutDashboard,Users,History,BookOpen,School,ClipboardList,FileText,Calendar,Bell,CircleUserRound ,Settings, LogOut, CircleQuestionMark} from "lucide-react";
+
 const menuItems = [
   {
     title: "MENU",
     items: [
       {
-        icon: "/home.png",
-        label: "Home",
-        href: "/",
-        visible: ["admin", "teacher", "student", "parent"],
+        icon: LayoutDashboard ,
+        label: "Dashboard",
+        href: "/med-pro",
+        visible: ["med", "med-pro"],
       },
       {
-        icon: "/teacher.png",
-        label: "Teachers",
-        href: "/list/teachers",
-        visible: ["admin", "teacher"],
+        icon: Users,
+        label: "Pacientes",
+        href: "/list/pacients",
+        visible: ["med", "med-pro"],
       },
       {
-        icon: "/student.png",
-        label: "Students",
-        href: "/list/students",
-        visible: ["admin", "teacher"],
+        icon: ClipboardList,
+        label: "Consultas",
+        href: "/list/appointments",
+        visible: ["med", "med-pro"],
       },
       {
-        icon: "/parent.png",
-        label: "Parents",
-        href: "/list/parents",
-        visible: ["admin", "teacher"],
+        icon: Calendar,
+        label: "Calendário",
+        href: "/calendar",
+        visible: ["med", "med-pro"],
       },
       {
-        icon: "/subject.png",
-        label: "Subjects",
-        href: "/list/subjects",
-        visible: ["admin"],
+        icon: FileText,
+        label: "Anexos",
+        href: "/attachments",
+        visible: ["med-pro"],
       },
       {
-        icon: "/class.png",
-        label: "Classes",
-        href: "/list/classes",
-        visible: ["admin", "teacher"],
+        icon: Bell,
+        label: "Notificações",
+        href: "/notifications",
+        visible: ["med-pro"],
       },
       {
-        icon: "/lesson.png",
-        label: "Lessons",
-        href: "/list/lessons",
-        visible: ["admin", "teacher"],
-      },
-      {
-        icon: "/exam.png",
-        label: "Exams",
-        href: "/list/exams",
-        visible: ["admin", "teacher", "student", "parent"],
-      },
-      {
-        icon: "/assignment.png",
-        label: "Assignments",
-        href: "/list/assignments",
-        visible: ["admin", "teacher", "student", "parent"],
-      },
-      {
-        icon: "/result.png",
-        label: "Results",
-        href: "/list/results",
-        visible: ["admin", "teacher", "student", "parent"],
-      },
-      {
-        icon: "/attendance.png",
-        label: "Attendance",
-        href: "/list/attendance",
-        visible: ["admin", "teacher", "student", "parent"],
-      },
-      {
-        icon: "/calendar.png",
-        label: "Events",
-        href: "/list/events",
-        visible: ["admin", "teacher", "student", "parent"],
-      },
-      {
-        icon: "/message.png",
-        label: "Messages",
-        href: "/list/messages",
-        visible: ["admin", "teacher", "student", "parent"],
-      },
-      {
-        icon: "/announcement.png",
-        label: "Announcements",
-        href: "/list/announcements",
-        visible: ["admin", "teacher", "student", "parent"],
+        icon: History,
+        label: "Histórico",
+        href: "/list/history",
+        visible: ["med", "med-pro"],
       },
     ],
   },
   {
-    title: "OTHER",
+    title: "OUTROS",
     items: [
       {
-        icon: "/profile.png",
+        icon: CircleUserRound,
         label: "Profile",
         href: "/profile",
-        visible: ["admin", "teacher", "student", "parent"],
+        visible: ["med", "med-pro"],
       },
       {
-        icon: "/setting.png",
-        label: "Settings",
+        icon: Settings,
+        label: "Configurações",
         href: "/settings",
-        visible: ["admin", "teacher", "student", "parent"],
+        visible: ["med-pro"],
       },
       {
-        icon: "/logout.png",
-        label: "Logout",
+        icon: BookOpen,
+        label: "Suporte",
+        href: "/support",
+        visible: ["med-pro"],
+      },
+      {
+        icon: CircleQuestionMark,
+        label: "Ajuda",
+        href: "/help",
+        visible: ["med-pro"],
+      },
+      {
+        icon: LogOut,
+        label: "Sair",
         href: "/logout",
-        visible: ["admin", "teacher", "student", "parent"],
+        visible: ["med", "med-pro"],
       },
     ],
   },
 ];
+
+const Menu = () => {
+  return (
+    <div className="mt-4 text-xs overflow-y-auto h-[90%] no-scrollbar">
+      {menuItems.map((i) => (
+        <div className="flex flex-col gap-2" key={i.title}>
+          <span className="hidden lg:block text-gray-400 font-light my-4">
+            {i.title}
+          </span>
+          {i.items.map((item) => {
+            if (item.visible.includes(role)) {
+              const Icon = item.icon;
+
+              return (
+                <Link
+                  href={item.href}
+                  key={item.label}
+                  className="flex items-center justify-center lg:justify-start gap-4 text-gray-500 py-2 md:px-2 rounded-md hover:bg-SkyLight"
+                >
+                  <Icon size={20} />
+                  <span className="hidden lg:block">{item.label}</span>
+                </Link>
+              );
+            }
+          })}
+        </div>
+      ))}
+    </div>
+  );
+};
+
+export default Menu;
