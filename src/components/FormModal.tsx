@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useState } from "react";
-import {Plus, View, Trash, Pencil, Download, ClipboardClock} from "lucide-react";
+import {Plus, View, Trash, Pencil, Download, ClipboardClock, X} from "lucide-react";
 
 // USE LAZY LOADING
 
@@ -42,8 +42,8 @@ const FormModal = ({
     type === "create"
       ? "bg-ciano"
       : type === "update"
-      ? "bg-turquuesaescuro"
-      : "bg-cianoescuro";
+      ? "bg-ciano"
+      : "bg-ciano";
 
   const [open, setOpen] = useState(false);
 
@@ -51,17 +51,13 @@ const FormModal = ({
     return type === "delete" && id ? (
       <form action="" className="p-4 flex flex-col gap-4">
         <span className="text-center font-medium">
-          Todos os dados relacionados com este registo serão eliminados. Tem a certeza de que quer continuar?
+          Tem a certeza que deseja eliminar este registo? Esta ação não pode ser desfeita.
         </span>
         <button className="bg-red-700 text-white py-2 px-4 rounded-md border-none w-max self-center">
           Delete
         </button>
       </form>
-    ) : type === "create" || type === "update" ? (
-      forms[table](type, data)
-    ) : (
-      "Form not found!"
-    );
+    ) : type === "create" || type === "update" 
   };
 
   return (
@@ -85,7 +81,7 @@ const FormModal = ({
               className="absolute top-4 right-4 cursor-pointer"
               onClick={() => setOpen(false)}
             >
-              <Image src="/close.png" alt="" width={14} height={14} />
+              <X size={14} />
             </div>
           </div>
         </div>

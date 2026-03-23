@@ -67,12 +67,12 @@ const PacientListPage = () => {
               <View size={16} />
             </button>
           </Link>
-          <Link href={`/list/pacients/${item.id}`}>
+          {/*<Link href={`/list/pacients/${item.id}`}>
             <button className="w-7 h-7 flex items-center justify-center rounded-full bg-blue-400" title="Editar">
-
               <Pencil size={16} />
             </button>
-          </Link>
+          </Link>*/}
+          <FormModal table="paciente" type="update" id={item.id}/>
           <Link href={`/list/pacients/${item.id}`}>
             <button className="w-7 h-7 flex items-center justify-center rounded-full bg-green-500" title="Descarregar PDF">
               <Download size={16} />
@@ -97,18 +97,19 @@ const PacientListPage = () => {
         <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
           <TableSearch />
           <div className="flex items-center gap-4 self-end">
-            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-turquesaescuro" title="Filtrar">
+            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-ciano" title="Filtrar">
               <SlidersHorizontal size={14} />
             </button>
-            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-turquesaescuro" title="Ordenar">
+            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-ciano" title="Ordenar">
               <ArrowDownWideNarrow width={14} height={14} />
             </button>
-            {role === "med" && (
-              //  <button className="w-8 h-8 flex items-center justify-center rounded-full bg-turquesaescuro" title="Adicionar Paciente">
-              //    <Plus width={14} height={14} />
-              //  </button>
-              <FormModal table="paciente" type="create"/>
-            )}
+            
+            <FormModal table="paciente" type="create"/>
+            {/*
+                <button className="w-8 h-8 flex items-center justify-center rounded-full bg-turquesaescuro" title="Adicionar Paciente">
+                  <Plus width={14} height={14} />
+                </button>
+            */}
           </div>
         </div>
       </div>
