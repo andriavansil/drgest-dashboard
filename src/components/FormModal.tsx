@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useState } from "react";
-import {Plus, View, Trash, Pencil, Download, ClipboardClock, X} from "lucide-react";
+import {Plus, View, Trash, Pencil, Download, ClipboardClock, X, AlertTriangle } from "lucide-react";
 
 // USE LAZY LOADING
 
@@ -47,22 +47,49 @@ const FormModal = ({
 
   const [open, setOpen] = useState(false);
 
-  const Form = () => {
-    return type === "delete" && id ? (
-      <form action="" className="p-4 flex flex-col gap-4">
-        <span className="text-center font-medium">
+const Form = () => {
+  return type === "delete" && id ? (
+    <form className="p-6 flex flex-col gap-5">
+      
+      {/* Ícone + título */}
+      <div className="flex flex-col items-center text-center gap-3">
+        <div className="bg-red-100 text-red-600 p-3 rounded-full">
+          <AlertTriangle size={28} />
+        </div>
+
+        <h2 className="text-lg font-semibold text-gray-800">
+          Eliminar registo
+        </h2>
+
+        <p className="text-sm text-gray-500 max-w-sm">
           Tem a certeza que deseja eliminar este registo? Esta ação não pode ser desfeita.
-        </span>
-        <button className="bg-red-700 text-white py-2 px-4 rounded-md border-none w-max self-center">
-          Delete
+        </p>
+      </div>
+
+      {/* Botões */}
+      <div className="flex justify-center gap-3 mt-2">
+        <button
+          type="button"
+          onClick={() => setOpen(false)}
+          className="px-4 py-2 rounded-md bg-gray-100 text-gray-600 hover:bg-gray-200 transition"
+        >
+          Cancelar
         </button>
-      </form>
-    ) : type === "create" || type === "update" ? (
-      forms[table](type, data)
-    ) : (
-      "Formulário não encontrado!"
-    );
-  };
+
+        <button
+          type="submit"
+          className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 transition"
+        >
+          Eliminar
+        </button>
+      </div>
+    </form>
+  ) : type === "create" || type === "update" ? (
+    forms[table](type, data)
+  ) : (
+    "Formulário não encontrado!"
+  );
+};
 
   return (
     <>
