@@ -5,35 +5,29 @@ import { parentsData, role } from "@/lib/data"
 import {SlidersHorizontal, ArrowDownWideNarrow, Plus, View, Trash, Pencil, Download, ClipboardClock} from "lucide-react"
 import Link from "next/link";
 import FormModal from "@/components/FormModal";
+Import { Appointment } from "@prisma/client"
 
-type Appointment = {
-   id: number;
-   name: string;
-   students: string;
-   phone: string;
-  address: string;
-   email: string;
-};
+type AppointmentList = Appointment & { patient:Patient[] } & { status:Status[]} ;
 
  const columns = [
    {
      header: "Data/Hora",
-     accessor: "name",
+     accessor: "datetime",
      className: "p-4",
    },
    {
      header: "Paciente",
-     accessor: "students",
+     accessor: "patient",
      className: "p-4 hidden md:table-cell",
    },
    {
      header: "Tipo",
-     accessor: "phone",
+     accessor: "type",
      className: "p-4 hidden md:table-cell",
    },
    {
      header: "Estado",
-     accessor: "address",
+     accessor: "status",
      className: "p-4 hidden lg:table-cell",
    },
    {
@@ -43,18 +37,16 @@ type Appointment = {
    },
  ];
 
- const AppointmentListPage = () => {
-
-     const renderRow = (item: Appointment) => (
+const renderRow = (item: AppointmentList) => (
      <tr
        key={item.id}
        className="border-b border-gray-200 text-sm hover:bg-slate-50"
      >
-       <td className="p-4">{item.name}</td>
-       <td className="hidden md:table-cell p-4">{item.students}</td>
-       <td className="hidden md:table-cell p-4"><span className={`badge ${item.phone === '1234567890' ? 'badge-office' : 'badge-home'}`}>{item.phone === '234567899' ? 'Consultório' : 'Domicílio'}</span></td>
+       <td className="p-4">{item.date}</td>
+       <td className="hidden md:table-cell p-4">{item.patient.map(patient=> patient.name)}</td>
+       <td className="hidden md:table-cell p-4"><span className={`badge ${item.type === 'Consultório' ? 'badge-office' : 'badge-home'}`}>{item.type}</span></td>
        {/* <td className="hidden lg:table-cell p-4">{item.address}</td> */}
-       <td className="hidden lg:table-cell p-4">{item.email}</td>
+       <td className="hidden lg:table-cell p-4">{item.map(status=> status.name)}</td>
        <td>
          <div className="flex items-center gap-2">
            <Link href={`/list/pacients/${item.id}`}>
@@ -85,8 +77,18 @@ type Appointment = {
          </div>
        </td>
      </tr>
-   );
+);
 
+ const AppointmentListPage = async () => {
+
+   const data = await prisma.appointment.findMany ({
+      include:{
+         patient:true,
+         status:true,
+      },
+   });
+   console.log(data)
+    
    return (
      <div className="bg-white rounded-md flex-1 m-4 mt-0">
        {/* TOP */}
@@ -114,7 +116,7 @@ type Appointment = {
          </div>
        </div>
        {/* LIST */}
-       <Table columns={columns} renderRow={renderRow} data={parentsData} />
+       <Table columns={columns} renderRow={renderRow} data={data} />
        {/* PAGINATION */}
        <Pagination />
      </div>
