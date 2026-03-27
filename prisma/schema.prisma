@@ -65,7 +65,7 @@ model Appointment {
   userId  String
   patientId Int
   date   DateTime
-  type   String?
+  type   Tipo
   local   String?
   reason  String?
   diagnosis String?
@@ -194,4 +194,9 @@ model Permission {
 enum Sexo {
   Masculino
   Femenino
+}
+
+enum Tipo {
+  Consultório
+  Domicílio
 }
