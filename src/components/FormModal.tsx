@@ -1,28 +1,28 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import Image from "next/image";
 import { useState } from "react";
-import {Plus, View, Trash, Pencil, Download, ClipboardClock, X, AlertTriangle } from "lucide-react";
+import { Plus, Pencil, Trash, X, AlertTriangle } from "lucide-react";
 
-// USE LAZY LOADING
-
-import TeacherForm from "./forms/TeacherForm";
-import StudentForm from "./forms/StudentForm";
-
-const TeacherForm = dynamic(() => import("./forms/AppointmentForm"), {
-  loading: () => <h1>Loading...</h1>,
+const AppointmentForm = dynamic(() => import("./forms/AppointmentForm"), {
+  loading: () => <LoadingSpinner />,
 });
-const StudentForm = dynamic(() => import("./forms/PacientForm"), {
-  loading: () => <h1>Loading...</h1>,
+const PacientForm = dynamic(() => import("./forms/PacientForm"), {
+  loading: () => <LoadingSpinner />,
 });
 
- const forms: {
-   [key: string]: (type: "create" | "update", data?: any) => JSX.Element;
- } = {
-   pacient: (type, data) => <PacientForm type={type} data={data} />,
-   appoointment: (type, data) => <AppointmentForm type={type} data={data} />
- };
+const LoadingSpinner = () => (
+  <div className="flex items-center justify-center p-8">
+    <div className="w-8 h-8 border-4 border-ciano/20 border-t-ciano rounded-full animate-spin" />
+  </div>
+);
+
+const forms: {
+  [key: string]: (type: "create" | "update", data?: any, onClose?: () => void) => JSX.Element;
+} = {
+  paciente: (type, data, onClose) => <PacientForm type={type} data={data} onClose={onClose} />,
+  consulta: (type, data, onClose) => <AppointmentForm type={type} data={data} onClose={onClose} />
+};
 
 const FormModal = ({
   table,
@@ -30,93 +30,133 @@ const FormModal = ({
   data,
   id,
 }: {
-  table:
-    | "paciente"
-    | "consulta";
+  table: "paciente" | "consulta";
   type: "create" | "schedule" | "update" | "delete";
   data?: any;
   id?: number;
 }) => {
-  const size = type === "create" ? "w-8 h-8" : "w-7 h-7";
-  const bgColor =
-    type === "create"
-      ? "bg-ciano"
-      : type === "update"
-      ? "bg-ciano"
-      : "bg-ciano";
-
   const [open, setOpen] = useState(false);
 
-const Form = () => {
-  return type === "delete" && id ? (
-    <form className="p-6 flex flex-col gap-5">
-      
-      {/* Ícone + título */}
-      <div className="flex flex-col items-center text-center gap-3">
-        <div className="bg-red-100 text-red-600 p-3 rounded-full">
-          <AlertTriangle size={28} />
-        </div>
+  const getButtonStyle = () => {
+    const baseStyle = "p-2 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95";
+    if (type === "create") return `${baseStyle} bg-ciano text-white hover:bg-ciano/90 shadow-sm`;
+    if (type === "update") return `${baseStyle} bg-ciano text-white hover:bg-ciano/90 shadow-sm`;
+    return `${baseStyle} bg-red-500 text-white hover:bg-red-600 shadow-sm`;
+  };
 
-        <h2 className="text-lg font-semibold text-gray-800">
-          Eliminar registo
-        </h2>
+  const getIcon = () => {
+    if (type === "create") return <Plus size={18} />;
+    if (type === "update") return <Pencil size={18} />;
+    return <Trash size={18} />;
+  };
 
-        <p className="text-sm text-gray-500 max-w-sm">
-          Tem a certeza que deseja eliminar este registo? Esta ação não pode ser desfeita.
-        </p>
+  const Form = () => {
+    if (type === "delete" && id) {
+      return (
+        <form className="p-6 flex flex-col gap-4">
+          <div className="flex flex-col items-center text-center gap-4">
+            <div className="bg-red-100 p-4 rounded-full animate-pulse">
+              <AlertTriangle size={32} className="text-red-600" />
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold text-gray-800 mb-2">
+                Eliminar Registo
+              </h2>
+              <p className="text-sm text-gray-500 max-w-sm">
+                Tem a certeza que deseja eliminar este registo? 
+                Esta ação não pode ser desfeita.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex justify-center gap-3 mt-2">
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              className="px-5 py-2.5 rounded-lg border-2 border-gray-200 text-gray-700 
+                         font-medium hover:bg-gray-50 hover:border-gray-300 
+                         transition-all duration-200"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              className="px-5 py-2.5 rounded-lg bg-red-600 text-white font-medium
+                         hover:bg-red-700 transition-all duration-200 shadow-sm
+                         flex items-center gap-2"
+            >
+              <Trash size={16} />
+              Eliminar
+            </button>
+          </div>
+        </form>
+      );
+    }
+    
+    if (type === "create" || type === "update") {
+      return forms[table](type, data, () => setOpen(false));
+    }
+    
+    return (
+      <div className="p-8 text-center text-gray-500">
+        Formulário não encontrado
       </div>
-
-      {/* Botões */}
-      <div className="flex justify-center gap-3 mt-2">
-        <button
-          type="button"
-          onClick={() => setOpen(false)}
-          className="px-4 py-2 rounded-md bg-gray-100 text-gray-600 hover:bg-gray-200 transition"
-        >
-          Cancelar
-        </button>
-
-        <button
-          type="submit"
-          className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 transition"
-        >
-          Eliminar
-        </button>
-      </div>
-    </form>
-  ) : type === "create" || type === "update" ? (
-    forms[table](type, data)
-  ) : (
-    "Formulário não encontrado!"
-  );
-};
+    );
+  };
 
   return (
     <>
       <button
-        className={`${size} flex items-center justify-center rounded-full ${bgColor}`}
+        className={getButtonStyle()}
         onClick={() => setOpen(true)}
+        title={type === "create" ? "Adicionar" : type === "update" ? "Editar" : "Eliminar"}
       >
-        {type === "create"
-          ? <Plus size={16} />
-          : type === "update"
-          ? <Pencil size={16} />
-          : <Trash size={16} />
-        }
+        {getIcon()}
       </button>
+
       {open && (
-        <div className="w-screen h-screen absolute left-0 top-0 bg-black bg-opacity-60 z-50 flex items-center justify-center">
-          <div className="bg-white p-4 rounded-md relative w-[90%] md:w-[70%] lg:w-[60%] xl:w-[50%] 2xl:w-[40%]">
-            <Form />
-            <div
-              className="absolute top-4 right-4 cursor-pointer"
-              onClick={() => setOpen(false)}
-            >
-              <X size={14} />
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 
+                     flex items-center justify-center p-4 animate-fadeIn"
+          onClick={(e) => e.target === e.currentTarget && setOpen(false)}
+        >
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] 
+                          overflow-y-auto animate-slideUp">
+            <div className="top-0 bg-white px-6 py-4 
+                           flex justify-end">
+            </div>
+            <div className="px-6 pb-6">
+              <Form />
             </div>
           </div>
         </div>
       )}
+
+      <style jsx>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        .animate-fadeIn {
+          animation: fadeIn 0.2s ease-out;
+        }
+        
+        .animate-slideUp {
+          animation: slideUp 0.3s ease-out;
+        }
+      `}</style>
     </>
   );
 };

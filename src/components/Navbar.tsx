@@ -3,11 +3,11 @@ import Image from "next/image";
 
 const Navbar = ({ toggleMenu }: { toggleMenu: () => void }) => {
   return (
-    <div className="flex items-center justify-between p-4">
+    <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-[#F7F8FA] z-10">
       {/* BUTTON */}
       <div
         onClick={toggleMenu}
-        className="lg:hidden bg-white rounded-full w-8 h-8 flex items-center justify-center cursor-pointer"
+        className="bg-white rounded-full w-8 h-8 flex items-center justify-center cursor-pointer"
       >
         <PanelLeftClose color="grey" size={20} />
       </div>

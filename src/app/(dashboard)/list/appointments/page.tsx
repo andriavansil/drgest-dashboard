@@ -58,7 +58,7 @@ type Appointment = {
        <td>
          <div className="flex items-center gap-2">
            <Link href={`/list/pacients/${item.id}`}>
-             <button className="w-7 h-7 flex items-center justify-center rounded-full bg-ciano" title="Ver Detalhes">
+             <button className="p-2 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95 bg-ciano text-white hover:bg-ciano/90 shadow-sm" title="Ver Detalhes">
                <View size={16} />
              </button>
            </Link>
@@ -71,7 +71,7 @@ type Appointment = {
            <FormModal table="consulta" type="update" id={item.id}/>
 
            <Link href={`/list/pacients/${item.id}`}>
-             <button className="w-7 h-7 flex items-center justify-center rounded-full bg-green-500" title="Descarregar PDF">
+             <button className="p-2 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95 bg-ciano text-white hover:bg-ciano/90 shadow-sm" title="Descarregar PDF">
                <Download size={16} />
              </button>
            </Link>
@@ -95,10 +95,10 @@ type Appointment = {
          <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
            <TableSearch />
            <div className="flex items-center gap-4 self-end">
-             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-ciano" title="Filtrar">
+             <button className="p-2 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95 bg-ciano text-white hover:bg-ciano/90 shadow-sm" title="Filtrar">
                <SlidersHorizontal size={14} />
              </button>
-             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-ciano" title="Ordenar">
+             <button className="p-2 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95 bg-ciano text-white hover:bg-ciano/90 shadow-sm" title="Ordenar">
                <ArrowDownWideNarrow width={14} height={14} />
              </button>
              {/*

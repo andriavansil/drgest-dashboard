@@ -20,10 +20,10 @@ export default function DashboardLayout({
         <div className="w-[14%] md:w-[8%] lg:w-[16%] xl:w-[14%] p-4">
           <Link
             href="/"
-            className="flex items-center justify-center lg:justify-start gap-2"
+            className="w-full flex items-start justify-start gap-2 mb-6"
           >
-            <Image src="/logo.png" alt="logo" width={32} height={32} />
-            <span className="hidden lg:block font-bold">Dr. Gest</span>
+            <Image className="hidden lg:block" src="/logo.png" alt="logo" width={150} height={100} />
+            <Image className="lg:hidden" src="/logo1.png" alt="logo" width={100} height={100} />
           </Link>
           <Menu />
         </div>
