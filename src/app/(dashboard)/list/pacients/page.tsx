@@ -5,15 +5,10 @@ import { role, teachersData } from "@/lib/data"
 import {SlidersHorizontal, ArrowDownWideNarrow, Plus, View, Trash, Pencil, Download} from "lucide-react"
 import Link from "next/link";
 import FormModal from "@/components/FormModal";
+Import { Appointment } from "@prisma/client";
+Import { ITEM_PER_PAGE } from "@/lib/settings"
 
-type Teacher = {
-  id: number;
-  name: string;
-  teacherId: string;
-  phone: string;
-  address: string;
-  classes: string[];
-};
+type PatientList = Patient & { appointment: Appointment[]} & {status:Status} & {userId:User};
 
 const columns = [
   {
@@ -23,12 +18,12 @@ const columns = [
   },
   {
     header: "Data de Nascimento",
-    accessor: "teacherId",
+    accessor: "birthdate",
     className: "p-4 hidden md:table-cell",
   },
   {
     header: "Contacto",
-    accessor: "phone",
+    accessor: "contact",
     className: "p-4 hidden md:table-cell",
   },
   {
@@ -38,7 +33,7 @@ const columns = [
   },
   {
     header: "Última Consulta",
-    accessor: "classes",
+    accessor: "lastAppointment",
     className: "p-4 hidden lg:table-cell",
   },
   {
@@ -48,18 +43,23 @@ const columns = [
   },
 ];
 
-const PacientListPage = () => {
-
-    const renderRow = (item: Teacher) => (
+const renderRow = (item: PatientList) => (
     <tr
       key={item.id}
       className="border-b border-gray-200 text-sm hover:bg-slate-50"
     >
       <td className="p-4">{item.name}</td>
-      <td className="hidden md:table-cell p-4">{item.teacherId}</td>
-      <td className="hidden md:table-cell p-4">{item.phone}</td>
+      <td className="hidden md:table-cell p-4">{item.birthdate}</td>
+      <td className="hidden md:table-cell p-4">{item.contact}</td>
       <td className="hidden lg:table-cell p-4">{item.address}</td>
-      <td className="hidden lg:table-cell p-4">{item.classes}</td>
+      <td className="hidden lg:table-cell p-4">
+        {new Intl.DateTimeFormat("pt-BR").format(item.lastAppointment.date)}
+        {item.lastAppointment.time.toLocaleTimeString("pt-BR", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+        })}
+      </td>
       <td>
         <div className="flex items-center gap-2">
           <Link href={`/list/pacients/${item.id}`}>
@@ -89,6 +89,55 @@ const PacientListPage = () => {
     </tr>
   );
 
+const PacientListPage = async ({searchParams}:{ searchParams: { [key: string]: string | undefined)} => {
+
+  const {page, ...queryParams} = searchParams;
+  const p = page ? parseInt(page) : 1;
+
+  //URL PARAMS CONDITION
+
+  const query: Prisma.PatientWhereInput= {};
+  
+  if (queryParams) {
+    for (const [key, value] of Object.entries(queryParams)) {
+      if (value !== undefined) {
+        switch (key) {
+          case "appointment":
+            query.appointment = { appointmentId: value },
+            };
+            break;
+          case "search":
+            query.OR = [
+              { patient: { name: { contains: value, mode: "insensitive" } } },
+              { patient: { birthdate: { contains: value, mode: "insensitive" } } },
+              { patient: { contact: { contains: value, mode: "insensitive" } } },
+              { patient: { adress: { contains: value, mode: "insensitive" } } },
+              { appointment: { lastAppointment: { contains: value } } },
+            ];
+            break;
+          default:
+            query.userId  = { contains: value };
+            break;
+        }
+      }
+    }
+  }
+  
+  {/*console.log(searchParams)*/}
+   const [data, count] = await prisma.§transaction([
+    prisma.patient.findMany ({
+     where: query,
+      include:{
+         appointment: {select: { date: true, time:true } },
+         status: {select: { nome: true },
+      },
+    take:ITEM_PER_PAGE,
+    skip:ITEM_PER_PAGE * (p - 1),
+   });
+    prisma.patient.count(),
+  ]);
+  const count = await prisma.patient.count(where:query)
+
   return (
     <div className="bg-white rounded-md flex-1 m-4 mt-0">
       {/* TOP */}
@@ -114,9 +163,9 @@ const PacientListPage = () => {
         </div>
       </div>  
       {/* LIST */}
-      <Table columns={columns} renderRow={renderRow} data={teachersData} />
+      <Table columns={columns} renderRow={renderRow} data={d} />
       {/* PAGINATION */}
-      <Pagination />
+      <Pagination page={p} count={count}/>
     </div>
   )
 }
