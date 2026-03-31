@@ -2,13 +2,17 @@ import Pagination from "@/components/Pagination"
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch"
 import { parentsData, role } from "@/lib/data"
-import {SlidersHorizontal, ArrowDownWideNarrow, Plus, View, Trash, Pencil, Download, ClipboardClock} from "lucide-react"
+import {SlidersHorizontal, ArrowDownWideNarrow, Plus, View, Trash, Pencil, Download, ClipboardClock, Import} from "lucide-react"
 import Link from "next/link";
 import FormModal from "@/components/FormModal";
-Import { Appointment } from "@prisma/client";
+import { Appointment, Patient, Prisma, Status, User } from "@prisma/client";
+import prisma from "@/lib/prisma";
 Import { ITEM_PER_PAGE } from "@/lib/settings"
 
-type AppointmentList = Appointment & { patient:Patient[] } & { status:Status[] & {userId:User}} ;
+type AppointmentList = Appointment & {
+  patient: Patient;
+  status: Status;
+};
 
  const columns = [
    {
@@ -44,16 +48,14 @@ const renderRow = (item: AppointmentList) => (
        className="border-b border-gray-200 text-sm hover:bg-slate-50"
      >
        <td className="p-4">
-        {item.date}
         {new Intl.DateTimeFormat("pt-BR").format(item.date)}
        </td>
-       <td className="hidden md:table-cell p-4">{item.patient.map(patient=> patient.name)}</td>
-       <td className="hidden md:table-cell p-4"><span className={`badge ${item.type === 'Consultório' ? 'badge-office' : 'badge-home'}`}>{item.type}</span></td>
-       {/* <td className="hidden lg:table-cell p-4">{item.address}</td> */}
-       <td className="hidden lg:table-cell p-4">{item.map(status=> status.name)}</td>
+       <td className="hidden md:table-cell p-4">{item.patient.name}</td>
+       <td className="hidden md:table-cell p-4"><span className={`badge ${item.type === 'CONSULTORIO' ? 'badge-office' : 'badge-home'}`}>{item.type}</span></td>
+       <td className="hidden lg:table-cell p-4">{item.status.name}</td>
        <td>
          <div className="flex items-center gap-2">
-          {item.status.nome === "med" && (
+          {role === "med" && (
            <>
             <Link href={`/list/pacients/${item.id}`}>
              
@@ -93,7 +95,7 @@ const AppointmentListPage = async ({searchParams}:{ searchParams: { [key: string
   const {page, ...queryParams} = searchParams;
   const p = page ? parseInt(page) : 1;
 
-  //URL PARAMS CONDITION
+  //URL PARAMS CONDITIONs
 
   const query: Prisma.AppointmentWhereInput= {};
   
@@ -137,7 +139,7 @@ const AppointmentListPage = async ({searchParams}:{ searchParams: { [key: string
    });
     prisma.appointment.count(),
   ]);
-  const count = await prisma.appointment.count(where:query)
+  const count = await prisma.appointment.count({ where: query });
   // console.log(data)
     
    return (

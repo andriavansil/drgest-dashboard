@@ -4,12 +4,11 @@
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
 }
-
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -97,8 +96,8 @@ model Attachment {
   statusId   Int
 
   user  User @relation(fields: [userId], references: [id])
-  patient    Patient   @relation(fields: [patientId], references: [id])
-  appointment  Appointment @relation(fields: [appointmentId], references: [id])
+  patient    Patient?   @relation(fields: [patientId], references: [id])
+  appointment  Appointment? @relation(fields: [appointmentId], references: [id])
   status Status   @relation(fields: [statusId], references: [id])
 }
 
@@ -144,7 +143,7 @@ model AuditLog {
 
 model Status {
   id Int  @id @default(autoincrement())
-  name  String
+  name  String @unique
   description  String?
 
   users  User[]
@@ -192,11 +191,11 @@ model Permission {
 }
 
 enum Sexo {
-  Masculino
-  Femenino
+  MASCULINO
+  FEMENINO
 }
 
 enum Tipo {
-  Consultório
-  Domicílio
+  CONSULTORIO
+  DOMICILIO
 }
