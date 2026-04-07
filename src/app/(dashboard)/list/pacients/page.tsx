@@ -1,14 +1,22 @@
 import Pagination from "@/components/Pagination"
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch"
-import { role, teachersData } from "@/lib/data"
 import {SlidersHorizontal, ArrowDownWideNarrow, Plus, View, Trash, Pencil, Download} from "lucide-react"
 import Link from "next/link";
 import FormModal from "@/components/FormModal";
-Import { Appointment } from "@prisma/client";
-Import { ITEM_PER_PAGE } from "@/lib/settings"
+import prisma from "@/lib/prisma";
+import { Patient, Prisma } from "@prisma/client";
+import { ITEM_PER_PAGE } from "@/lib/settings";
+import { auth } from "@clerk/nextjs/server";
 
-type PatientList = Patient & { appointment: Appointment[]} & {status:Status} & {userId:User};
+//type PatientList = Patient & { appointment: Appointment[]} & {status:Status} & {userId:User};
+type PatientList = Patient & {
+  appointments: { date: Date }[];
+  status: { id: number; name: string };
+};
+
+const { sessionClaims } = auth();
+const role = (sessionClaims?.metadata as { role?: string })?.role;
 
 const columns = [
   {
@@ -18,7 +26,7 @@ const columns = [
   },
   {
     header: "Data de Nascimento",
-    accessor: "birthdate",
+    accessor: "birthday",
     className: "p-4 hidden md:table-cell",
   },
   {
@@ -49,121 +57,158 @@ const renderRow = (item: PatientList) => (
       className="border-b border-gray-200 text-sm hover:bg-slate-50"
     >
       <td className="p-4">{item.name}</td>
-      <td className="hidden md:table-cell p-4">{item.birthdate}</td>
+      <td className="hidden md:table-cell p-4">{new Intl.DateTimeFormat("pt-PT", {
+        dateStyle: "short",
+      }).format(item.birthday)}</td>
       <td className="hidden md:table-cell p-4">{item.contact}</td>
       <td className="hidden lg:table-cell p-4">{item.address}</td>
-      <td className="hidden lg:table-cell p-4">
-        {new Intl.DateTimeFormat("pt-BR").format(item.lastAppointment.date)}
-        {item.lastAppointment.time.toLocaleTimeString("pt-BR", {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: false,
-        })}
-      </td>
+    <td className="hidden lg:table-cell p-4">
+    {item.appointments[0]
+      ? new Intl.DateTimeFormat("pt-PT", {
+          dateStyle: "short",
+        }).format(item.appointments[0].date)
+      : "—"}
+    </td>
       <td>
         <div className="flex items-center gap-2">
-          <Link href={`/list/pacients/${item.id}`}>
-            <button className="p-2 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95 bg-ciano text-white hover:bg-ciano/90 shadow-sm" title="Ver Detalhes">
-              <View size={16} />
-            </button>
-          </Link>
+          {role === "med-pro" && (
+            <Link href={`/list/pacients/${item.id}`}>
+              <button className="p-2 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95 bg-ciano text-white hover:bg-ciano/90 shadow-sm" title="Ver Detalhes">
+                <View size={16} />
+              </button>
+            </Link>
+          )}
+
           {/*<Link href={`/list/pacients/${item.id}`}>
             <button className="w-7 h-7 flex items-center justify-center rounded-full bg-blue-400" title="Editar">
               <Pencil size={16} />
             </button>
           </Link>*/}
-          <FormModal table="paciente" type="update" id={item.id}/>
+          
+          <FormModal table="paciente" type="update" data={item}/>
           <Link href={`/list/pacients/${item.id}`}>
             <button className="p-2 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95 bg-ciano text-white hover:bg-ciano/90 shadow-sm" title="Descarregar PDF">
               <Download size={16} />
             </button>
           </Link>
-          {role === "med" && (
-             //<button className="w-7 h-7 flex items-center justify-center rounded-full bg-red-500" title="Eliminar">
-              // <Trash size={16} />
-             //</button>             
-            <FormModal table="paciente" type="delete" id={item.id}/>
-          )}
+          <FormModal table="paciente" type="delete" id={item.id}/>
         </div>
       </td>
     </tr>
   );
 
-const PacientListPage = async ({searchParams}:{ searchParams: { [key: string]: string | undefined)} => {
+const PacientListPage = async ({searchParams}:{ searchParams: { [key: string]: string | undefined}}) => {
 
+  const {userId} = auth();
   const {page, ...queryParams} = searchParams;
   const p = page ? parseInt(page) : 1;
 
   //URL PARAMS CONDITION
 
-  const query: Prisma.PatientWhereInput= {};
+  const query: Prisma.PatientWhereInput = {
+    userId: userId!,
+  };
   
   if (queryParams) {
+    const filters: Prisma.PatientWhereInput[] = [];
+  
     for (const [key, value] of Object.entries(queryParams)) {
-      if (value !== undefined) {
-        switch (key) {
-          case "appointment":
-            query.appointment = { appointmentId: value },
-            };
-            break;
-          case "search":
-            query.OR = [
-              { patient: { name: { contains: value, mode: "insensitive" } } },
-              { patient: { birthdate: { contains: value, mode: "insensitive" } } },
-              { patient: { contact: { contains: value, mode: "insensitive" } } },
-              { patient: { adress: { contains: value, mode: "insensitive" } } },
-              { appointment: { lastAppointment: { contains: value } } },
-            ];
-            break;
-          default:
-            query.userId  = { contains: value };
-            break;
-        }
+      if (!value) continue;
+  
+      switch (key) {
+        case "search":
+          filters.push({
+            OR: [
+              {
+                name: {
+                  contains: value,
+                  mode: "insensitive",
+                },
+              },
+              {
+                contact: {
+                  contains: value,
+                  mode: "insensitive",
+                },
+              },
+              {
+                address: {
+                  contains: value,
+                  mode: "insensitive",
+                },
+              },              
+            ],
+          });
+          break;
+  
+        case "status":
+          filters.push({
+            statusId: parseInt(value),
+          });
+          break;
+  
+        case "hasAppointments":
+          filters.push({
+            appointments: {
+              some: {},
+            },
+          });
+          break;
       }
+    }
+  
+    if (filters.length > 0) {
+      query.AND = filters;
     }
   }
   
-  {/*console.log(searchParams)*/}
-   const [data, count] = await prisma.§transaction([
-    prisma.patient.findMany ({
-     where: query,
-      include:{
-         appointment: {select: { date: true, time:true } },
-         status: {select: { nome: true },
+  const [data, count] = await prisma.$transaction([
+    prisma.patient.findMany({
+      where: query,
+      include: {
+        appointments: {
+          orderBy: { date: "desc" },
+          take: 1,
+          select: { date: true },
+        },
+        status: {
+          select: { id: true, name: true },
+        },
       },
-    take:ITEM_PER_PAGE,
-    skip:ITEM_PER_PAGE * (p - 1),
-   });
-    prisma.patient.count(),
+      take: ITEM_PER_PAGE,
+      skip: ITEM_PER_PAGE * (p - 1),
+      orderBy: {
+        name: "asc",
+      },
+    }),
+    prisma.patient.count({ where: query }),
   ]);
-  const count = await prisma.patient.count(where:query)
 
   return (
-    <div className="bg-white rounded-md flex-1 m-4 mt-0">
+    <div className="bg-white rounded-md flex-1 m-4 mt-4">
       {/* TOP */}
       <div className="flex items-center justify-between p-4">
         <h1 className="hidden md:block text-lg font-semibold">Lista de Pacientes</h1>
         <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
           <TableSearch />
           <div className="flex items-center gap-4 self-end">
-            <button className="p-2 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95 bg-ciano text-white hover:bg-ciano/90 shadow-sm" title="Filtrar">
-              <SlidersHorizontal size={14} />
-            </button>
-            <button className="p-2 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95 bg-ciano text-white hover:bg-ciano/90 shadow-sm" title="Ordenar">
-              <ArrowDownWideNarrow width={14} height={14} />
-            </button>
-            
+          {role === "med-pro" && (
+            <>
+              <button className="p-2 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95 bg-ciano text-white hover:bg-ciano/90 shadow-sm" title="Filtrar">
+                <SlidersHorizontal size={14} />
+              </button>
+              <button className="p-2 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95 bg-ciano text-white hover:bg-ciano/90 shadow-sm" title="Ordenar">
+                <ArrowDownWideNarrow width={14} height={14} />
+              </button>
+            </>
+          )}            
+
             <FormModal table="paciente" type="create"/>
-            {/*
-                <button className="w-8 h-8 flex items-center justify-center rounded-full bg-turquesaescuro" title="Adicionar Paciente">
-                  <Plus width={14} height={14} />
-                </button>
-            */}
           </div>
         </div>
       </div>  
       {/* LIST */}
-      <Table columns={columns} renderRow={renderRow} data={d} />
+      <Table columns={columns} renderRow={renderRow} data={data} />
       {/* PAGINATION */}
       <Pagination page={p} count={count}/>
     </div>

@@ -2,35 +2,15 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useWatch } from "react-hook-form";
-import { z } from "zod";
 import InputField from "../InputField";
 import { X, Clock, MapPin, Stethoscope, FileText, Activity } from "lucide-react";
-
-const schema = z.object({
-  id_paciente: z.string().min(1, { message: "Paciente é obrigatório" }),
-  data: z.string().min(1, { message: "Data da consulta é obrigatória" }),
-  hora: z.string().min(1, { message: "Hora da consulta é obrigatória" }),
-  tipo: z.enum(["consultorio", "domicilio"], {
-    message: "Tipo é obrigatório",
-  }),
-  local: z.string().optional(),
-  motivo: z.string().min(1, { message: "Motivo é obrigatório" }),
-  diagnostico: z.string().optional(),
-  observacoes: z.string().optional(),
-  idStatus: z.string().min(1, {
-    message: "Status é obrigatório",
-  }),
-}).refine((data) => {
-  if (data.tipo === "domicilio") {
-    return !!data.local && data.local.length > 0;
-  }
-  return true;
-}, {
-  message: "Local é obrigatório para consultas ao domicílio",
-  path: ["local"],
-});
-
-type Inputs = z.infer<typeof schema>;
+import { appointmentSchema } from "@/lib/formValidationSchemas";
+import { createAppointment, updateAppointment, getPatientsForUser } from "@/lib/actions";
+import { useFormState } from "react-dom";
+import { useRouter } from "next/navigation";
+import { toast } from "react-toastify";
+import { useEffect, useState } from "react";
+import z from "zod";
 
 const AppointmentForm = ({ 
   type, 
@@ -41,36 +21,57 @@ const AppointmentForm = ({
   data?: any; 
   onClose?: () => void;
 }) => {
+  const [patients, setPatients] = useState<{ id: number; name: string }[]>([]);
+
   const {
     register,
     handleSubmit,
     control,
     formState: { errors, isSubmitting },
-  } = useForm<Inputs>({
-    resolver: zodResolver(schema),
-    defaultValues: {
-      id_paciente: data?.id_paciente || "",
-      data: data?.data || "",
-      hora: data?.hora || "",
-      tipo: data?.tipo || "",
-      local: data?.local || "",
-      motivo: data?.motivo || "",
-      diagnostico: data?.diagnostico || "",
-      observacoes: data?.observacoes || "",
-      idStatus: data?.idStatus || "",
-    },
+  } = useForm<z.input<typeof appointmentSchema>>({
+    resolver: zodResolver(appointmentSchema),
   });
 
   const tipo = useWatch({
     control,
-    name: "tipo",
+    name: "type",
+  }); 
+
+const [state, formAction] = useFormState(type === "create" ? createAppointment : updateAppointment, {
+    success: false,
+    error: false,
   });
 
   const onSubmit = handleSubmit(async (data) => {
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    console.log(data);
-    onClose?.();
+    const parsedData = appointmentSchema.parse(data);
+        formAction(parsedData);
   });
+
+  const router = useRouter();
+
+  useEffect(() => {
+    if (state.success) {
+      type === "create" ? toast.success("Consulta criada com sucesso!") : toast.success("Consulta atualizada com sucesso!");
+      onClose?.();
+      router.refresh();
+    }
+  }, [state, router]);
+
+  useEffect(() => {
+    const fetchPatients = async () => {
+      const patientList = await getPatientsForUser();
+      setPatients(patientList);
+    };
+    fetchPatients();
+  }, []);
+
+const formatLocalDateTime =  (date: string | Date): string => {
+  const d = new Date(date)
+
+  const pad = (n: number): string => String(n).padStart(2, "0")
+
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-6">
@@ -107,42 +108,48 @@ const AppointmentForm = ({
             Paciente <span className="text-red-500 ml-1">*</span>
           </label>
           <div className="relative">
-            <input
-              {...register("id_paciente")}
+            <select
+              {...register("pacienteId")}
+              defaultValue={data?.patientId?.toString() ?? ""} // Garante que o valor padrão seja uma string
               className="w-full px-4 py-2.5 rounded-lg border-2 border-gray-200 
                          focus:border-ciano focus:ring-2 focus:ring-ciano/20 
-                         transition-all duration-200 outline-none
-                         hover:border-gray-300"
-              placeholder="Nome do paciente"
-              defaultValue={data?.id_paciente}
-            />
+                         transition-all duration-200 outline-none appearance-none
+                         bg-white cursor-pointer hover:border-gray-300"
+            >
+              <option value="">Selecione um paciente</option>
+              {patients.map((patient) => (
+                <option key={patient.id} value={patient.id.toString()}>
+                  {patient.name}
+                </option>
+              ))}
+            </select>
           </div>
-          {errors.id_paciente && (
-            <p className="text-xs text-red-500">{errors.id_paciente.message}</p>
+          {errors.pacienteId && (
+            <p className="text-xs text-red-500">{errors.pacienteId.message}</p>
           )}
         </div>
 
         {/* Data */}
         <InputField
-          label="Data da Consulta"
-          name="data"
-          type="date"
-          defaultValue={data?.data}
+          label="Data e hora da Consulta"
+          name="date"
+          type="datetime-local"
+          defaultValue= {data?.date ? formatLocalDateTime(data.date) : ""} // Formata a data para o formato YYYY-MM-DDTHH:MM
           register={register}
-          error={errors?.data}
+          error={errors?.date}
           required
         />
 
-        {/* Hora */}
+        {/* Hora
         <InputField
           label="Hora da Consulta"
-          name="hora"
+          name="time"
           type="time"
-          defaultValue={data?.hora}
+          defaultValue={data?.date ? `${data.date.getHours().toString().padStart(2, "0")}:${data.date.getMinutes().toString().padStart(2, "0")}` : ""} // Formata a hora para o formato HH:MM
           register={register}
-          error={errors?.hora}
+          error={errors?.time}
           required
-        />
+        /> */}
 
         {/* Tipo */}
         <div className="flex flex-col gap-2 w-full">
@@ -151,15 +158,16 @@ const AppointmentForm = ({
           </label>
           <div className="relative">
             <select
-              {...register("tipo")}
+              {...register("type")}
+              defaultValue={data?.type}
               className="w-full px-4 py-2.5 rounded-lg border-2 border-gray-200 
                          focus:border-ciano focus:ring-2 focus:ring-ciano/20 
                          transition-all duration-200 outline-none appearance-none
                          bg-white cursor-pointer hover:border-gray-300"
             >
               <option value="">Selecionar tipo</option>
-              <option value="consultorio">Consultório</option>
-              <option value="domicilio">Domicílio</option>
+              <option value="CONSULTORIO">Consultório</option>
+              <option value="DOMICILIO">Domicílio</option>
             </select>
             <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
               <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -167,23 +175,34 @@ const AppointmentForm = ({
               </svg>
             </div>
           </div>
-          {errors.tipo && (
-            <p className="text-xs text-red-500">{errors.tipo.message}</p>
+          {errors.type && (
+            <p className="text-xs text-red-500">{errors.type.message}</p>
           )}
         </div>
 
         {/* Local (condicional) */}
-        {tipo === "domicilio" && (
-          <div className="animate-fadeIn">
-            <InputField
-              label="Local"
-              name="local"
-              defaultValue={data?.local}
-              register={register}
-              error={errors?.local}
-              required
-            />
-          </div>
+        
+            <div>
+              <InputField
+                label="Local"
+                name="local"
+                defaultValue={data?.local}
+                register={register}
+                error={errors?.local}
+                required={tipo === "DOMICILIO"}
+              />
+            </div>
+        
+
+        {data && (
+          <InputField
+            label="Id"
+            name="id"
+            defaultValue={data?.id}
+            register={register}
+            error={errors?.id}
+            hidden
+          />
         )}
 
         {/* Status */}
@@ -194,15 +213,16 @@ const AppointmentForm = ({
           <div className="relative">
             <select
               {...register("idStatus")}
+              defaultValue={data?.statusId}
               className="w-full px-4 py-2.5 rounded-lg border-2 border-gray-200 
                          focus:border-ciano focus:ring-2 focus:ring-ciano/20 
                          transition-all duration-200 outline-none appearance-none
                          bg-white cursor-pointer hover:border-gray-300"
             >
               <option value="">Selecionar status</option>
-              <option value="1">Agendada</option>
-              <option value="2">Realizada</option>
-              <option value="3">Cancelada</option>
+              <option value="2">Agendada</option>
+              <option value="3">Realizada</option>
+              <option value="4">Cancelada</option>
             </select>
             <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
               <Activity className="w-4 h-4 text-gray-400" />
@@ -219,17 +239,17 @@ const AppointmentForm = ({
             Motivo <span className="text-red-500 ml-1">*</span>
           </label>
           <textarea
-            {...register("motivo")}
+            {...register("reason")}
             className="w-full px-4 py-2.5 rounded-lg border-2 border-gray-200 
                        focus:border-ciano focus:ring-2 focus:ring-ciano/20 
                        transition-all duration-200 outline-none resize-none
                        hover:border-gray-300"
             rows={2}
-            defaultValue={data?.motivo}
+            defaultValue={data?.reason}
             placeholder="Descreva o motivo da consulta..."
           />
-          {errors.motivo?.message && (
-            <p className="text-xs text-red-500">{errors.motivo.message.toString()}</p>
+          {errors.reason?.message && (
+            <p className="text-xs text-red-500">{errors.reason.message.toString()}</p>
           )}
         </div>
 
@@ -237,17 +257,17 @@ const AppointmentForm = ({
         <div className="flex flex-col gap-2 w-full md:col-span-2">
           <label className="text-sm font-medium text-gray-700">Diagnóstico</label>
           <textarea
-            {...register("diagnostico")}
+            {...register("diagnosis")}
             className="w-full px-4 py-2.5 rounded-lg border-2 border-gray-200 
                        focus:border-ciano focus:ring-2 focus:ring-ciano/20 
                        transition-all duration-200 outline-none resize-none
                        hover:border-gray-300"
             rows={2}
-            defaultValue={data?.diagnostico}
+            defaultValue={data?.diagnosis}
             placeholder="Diagnóstico do paciente..."
           />
-          {errors.diagnostico?.message && (
-            <p className="text-xs text-red-500">{errors.diagnostico.message.toString()}</p>
+          {errors.diagnosis?.message && (
+            <p className="text-xs text-red-500">{errors.diagnosis.message.toString()}</p>
           )}
         </div>
 
@@ -255,21 +275,27 @@ const AppointmentForm = ({
         <div className="flex flex-col gap-2 w-full md:col-span-2">
           <label className="text-sm font-medium text-gray-700">Observações</label>
           <textarea
-            {...register("observacoes")}
+            {...register("observations")}
             className="w-full px-4 py-2.5 rounded-lg border-2 border-gray-200 
                        focus:border-ciano focus:ring-2 focus:ring-ciano/20 
                        transition-all duration-200 outline-none resize-none
                        hover:border-gray-300"
             rows={3}
-            defaultValue={data?.observacoes}
+            defaultValue={data?.observations}
             placeholder="Observações adicionais sobre a consulta..."
           />
-          {errors.observacoes?.message && (
-            <p className="text-xs text-red-500">{errors.observacoes.message.toString()}</p>
+          {errors.observations?.message && (
+            <p className="text-xs text-red-500">{errors.observations.message.toString()}</p>
           )}
         </div>
       </div>
 
+      {state.error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg">
+          <p className="font-bold">Erro!</p>
+          <p>Ocorreu um erro ao {type === "create" ? "criar" : "atualizar"} a consulta.</p>
+        </div>
+      )}
       {/* Botões */}
       <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
         {onClose && (
@@ -284,7 +310,6 @@ const AppointmentForm = ({
           </button>
         )}
         <button
-          type="submit"
           disabled={isSubmitting}
           className="px-6 py-2.5 rounded-lg bg-ciano text-white font-medium
                      hover:bg-ciano/90 active:scale-95 

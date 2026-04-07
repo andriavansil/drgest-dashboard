@@ -1,8 +1,17 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState } from "react";
-import { Plus, Pencil, Trash, X, AlertTriangle } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Plus, Pencil, Trash, AlertTriangle } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useFormState } from "react-dom";
+import { toast } from "react-toastify";
+import { deleteAppointment, deletePatient } from "@/lib/actions";
+
+const deleteActionMap = {
+  paciente: deletePatient,
+  consulta: deleteAppointment,
+};
 
 const AppointmentForm = dynamic(() => import("./forms/AppointmentForm"), {
   loading: () => <LoadingSpinner />,
@@ -51,21 +60,44 @@ const FormModal = ({
   };
 
   const Form = () => {
+    const [state, formAction] = useFormState(deleteActionMap[table], {
+      success: false,
+      error: false,
+    });
+
+    const router = useRouter();
+
+    useEffect(() => {
+      if (state.success) {
+        toast(`${table} eliminado com sucesso!`);
+        //onClose?.();
+        router.refresh();
+      }
+    }, [state, router]);
+
     if (type === "delete" && id) {
       return (
-        <form className="p-6 flex flex-col gap-4">
+        <form action={formAction} className="p-6 flex flex-col gap-4">
           <div className="flex flex-col items-center text-center gap-4">
             <div className="bg-red-100 p-4 rounded-full animate-pulse">
               <AlertTriangle size={32} className="text-red-600" />
             </div>
             <div>
+              <input type="text | number" name="id" value={id}  hidden/>
               <h2 className="text-xl font-semibold text-gray-800 mb-2">
                 Eliminar Registo
               </h2>
-              <p className="text-sm text-gray-500 max-w-sm">
-                Tem a certeza que deseja eliminar este registo? 
-                Esta ação não pode ser desfeita.
-              </p>
+              {table === "paciente" ? (
+                <p className="text-sm text-gray-500 max-w-sm">
+                  Tem a certeza que deseja eliminar este paciente? 
+                  Todas as consultas associadas a este paciente também foram eliminadas.
+                </p>
+              ) : (
+                <p className="text-sm text-gray-500 max-w-sm">
+                  Tem a certeza que deseja eliminar esta consulta? 
+                  Esta ação não pode ser desfeita.
+                </p>
+              )}
             </div>
           </div>
 
@@ -80,7 +112,6 @@ const FormModal = ({
               Cancelar
             </button>
             <button
-              type="submit"
               className="px-5 py-2.5 rounded-lg bg-red-600 text-white font-medium
                          hover:bg-red-700 transition-all duration-200 shadow-sm
                          flex items-center gap-2"

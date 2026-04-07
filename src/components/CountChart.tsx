@@ -7,34 +7,28 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
+const CountChart = ({ Homens, Mulheres }: { Homens: number; Mulheres: number }) => {
+
 const data = [
   {
     name: "Total",
-    count: 106,
+    count: Homens + Mulheres,
     fill: "white",
   },
   {
     name: "Mulheres",
-    count: 53,
+    count: Mulheres,
     fill: "#27bac1",
   },
   {
     name: "Homens",
-    count: 53,
+    count: Homens,
     fill: "#035e68",
   },
 ];
 
-const CountChart = () => {
   return (
-    <div className="bg-white rounded-xl w-full h-full p-4">
-      {/* TITLE */}
-      <div className="flex justify-between items-center">
-        <h1 className="text-lg font-semibold">Pacientes</h1>
-        <Image src="/moreDark.png" alt="" width={20} height={20} />
-      </div>
-      {/* CHART */}
-      <div className="relative w-full h-[75%]">
+    <div className="relative w-full h-[75%]">
         <ResponsiveContainer>
           <RadialBarChart
             cx="50%"
@@ -54,20 +48,6 @@ const CountChart = () => {
           height={50}
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
         />
-      </div>
-      {/* BOTTOM */}
-      <div className="flex justify-center gap-16">
-        <div className="flex flex-col gap-1">
-          <div className="w-5 h-5 bg-azulceleste rounded-full" />
-          <h1 className="font-bold">1,234</h1>
-          <h2 className="text-xs text-gray-300">Mulheres (55%)</h2>
-        </div>
-        <div className="flex flex-col gap-1">
-          <div className="w-5 h-5 bg-ciano rounded-full" />
-          <h1 className="font-bold">1,234</h1>
-          <h2 className="text-xs text-gray-300">Homens (45%)</h2>
-        </div>
-      </div>
     </div>
   );
 };

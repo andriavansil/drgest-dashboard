@@ -1,47 +1,75 @@
-const Announcements = () => {
+import prisma from "@/lib/prisma";
+import { auth } from "@clerk/nextjs/server";
+import Link from "next/link";
+
+const Announcements = async () => {
+
+  const {userId, sessionClaims} = auth();
+
+  const data = await prisma.auditLog.findMany({
+    where: {
+      userId: userId || undefined,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+    take: 3,
+  });
+
   return (
     <div className="bg-white p-4 rounded-md">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Atividades Recentes</h1>
-        <span className="text-xs text-gray-400">View All</span>
+        <Link rel="stylesheet" href="/list/history">
+          <span className="text-xs text-gray-400">View All</span>
+        </Link>
       </div>
       <div className="flex flex-col gap-4 mt-4">
-        <div className="bg-SkyLight rounded-md p-4">
-          <div className="flex items-center justify-between">
-            <h2 className="font-medium">Lorem ipsum dolor sit</h2>
-            <span className="text-xs text-gray-400 bg-white rounded-md px-1 py-1">
-              2025-01-01
-            </span>
+        {data[0] && (
+          <div className="bg-SkyLight rounded-md p-4">
+            <div className="flex items-center justify-between">
+              <h2 className="font-medium">{data[0].entityType}</h2>
+              <span className="text-xs text-gray-400 bg-white rounded-md px-1 py-1">
+                {new Intl.DateTimeFormat("pt-PT", {
+                  year: "numeric",
+                  month: "2-digit",
+                  day: "2-digit",
+                }).format(new Date(data[0].createdAt))}
+              </span>
+            </div>
+            <p className="text-sm text-gray-400 mt-1">{data[0].details}</p>
           </div>
-          <p className="text-sm text-gray-400 mt-1">
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Voluptatum,
-            expedita. Rerum, quidem facilis?
-          </p>
-        </div>
-        <div className="bg-SkyLight rounded-md p-4">
-          <div className="flex items-center justify-between">
-            <h2 className="font-medium">Lorem ipsum dolor sit</h2>
-            <span className="text-xs text-gray-400 bg-white rounded-md px-1 py-1">
-              2025-01-01
-            </span>
+        )}
+        {data[1] && (
+          <div className="bg-SkyLight rounded-md p-4">
+            <div className="flex items-center justify-between">
+              <h2 className="font-medium">{data[1].entityType}</h2>
+              <span className="text-xs text-gray-400 bg-white rounded-md px-1 py-1">
+                {new Intl.DateTimeFormat("pt-PT", {
+                  year: "numeric",
+                  month: "2-digit",
+                  day: "2-digit",
+                }).format(new Date(data[1].createdAt))}
+              </span>
+            </div>
+            <p className="text-sm text-gray-400 mt-1">{data[1].details}</p>
           </div>
-          <p className="text-sm text-gray-400 mt-1">
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Voluptatum,
-            expedita. Rerum, quidem facilis?
-          </p>
-        </div>
-        <div className="bg-SkyLight rounded-md p-4">
-          <div className="flex items-center justify-between">
-            <h2 className="font-medium">Lorem ipsum dolor sit</h2>
-            <span className="text-xs text-gray-400 bg-white rounded-md px-1 py-1">
-              2025-01-01
-            </span>
+        )}
+        {data[2] && (
+          <div className="bg-SkyLight rounded-md p-4">
+            <div className="flex items-center justify-between">
+              <h2 className="font-medium">{data[2].entityType}</h2>
+              <span className="text-xs text-gray-400 bg-white rounded-md px-1 py-1">
+                {new Intl.DateTimeFormat("pt-PT", {
+                  year: "numeric",
+                  month: "2-digit",
+                  day: "2-digit",
+                }).format(new Date(data[2].createdAt))}
+              </span>
+            </div>
+            <p className="text-sm text-gray-500 mt-1">{data[2].details}</p>
           </div>
-          <p className="text-sm text-gray-500 mt-1">
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Voluptatum,
-            expedita. Rerum, quidem facilis?
-          </p>
-        </div>
+        )}
       </div>
     </div>
   );

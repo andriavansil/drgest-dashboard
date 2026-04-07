@@ -1,18 +1,22 @@
 import Pagination from "@/components/Pagination"
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch"
-import { parentsData, role } from "@/lib/data"
-import {SlidersHorizontal, ArrowDownWideNarrow, Plus, View, Trash, Pencil, Download, ClipboardClock, Import} from "lucide-react"
+import {SlidersHorizontal, ArrowDownWideNarrow, View, Download, ClipboardClock} from "lucide-react"
 import Link from "next/link";
 import FormModal from "@/components/FormModal";
-import { Appointment, Patient, Prisma, Status, User } from "@prisma/client";
 import prisma from "@/lib/prisma";
-Import { ITEM_PER_PAGE } from "@/lib/settings"
+import { Appointment, Prisma, Tipo } from "@prisma/client";
+import { ITEM_PER_PAGE } from "@/lib/settings";
+import { auth } from "@clerk/nextjs/server";
 
+//type AppointmentList = Appointment & { patient:Patient } & { status:Status} & {userId:User} ;
 type AppointmentList = Appointment & {
-  patient: Patient;
-  status: Status;
+  patient: { id: number; name: string };
+  status: { id: number; name: string };
 };
+
+  const { sessionClaims } = auth();
+  const role = (sessionClaims?.metadata as { role?: string })?.role;
 
  const columns = [
    {
@@ -42,128 +46,166 @@ type AppointmentList = Appointment & {
    },
  ];
 
+const isTipo = (value: string | undefined): value is Tipo => {
+  return !!value && Object.values(Tipo).includes(value as Tipo);
+};
+
 const renderRow = (item: AppointmentList) => (
-     <tr
+
+    <tr
        key={item.id}
-       className="border-b border-gray-200 text-sm hover:bg-slate-50"
-     >
+       className="border-b border-gray-200 text-sm hover:bg-slate-50">
        <td className="p-4">
-        {new Intl.DateTimeFormat("pt-BR").format(item.date)}
+       {new Intl.DateTimeFormat("pt-PT", {
+          dateStyle: "short",
+          timeStyle: "short",
+        }).format(item.date)}
        </td>
        <td className="hidden md:table-cell p-4">{item.patient.name}</td>
        <td className="hidden md:table-cell p-4"><span className={`badge ${item.type === 'CONSULTORIO' ? 'badge-office' : 'badge-home'}`}>{item.type}</span></td>
+       {/* <td className="hidden lg:table-cell p-4">{item.address}</td> */}
        <td className="hidden lg:table-cell p-4">{item.status.name}</td>
        <td>
          <div className="flex items-center gap-2">
-          {role === "med" && (
-           <>
-            <Link href={`/list/pacients/${item.id}`}>
-             
+          {role === "med-pro" && (
+            <Link href={`/list/pacients/${item.id}`}>             
               <button className="p-2 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95 bg-ciano text-white hover:bg-ciano/90 shadow-sm" title="Ver Detalhes">
                 <View size={16} />
               </button>
             </Link>
-           </>
           )}
-           {/*<Link href={`/list/pacients/${item.id}`}>
-             <button className="w-7 h-7 flex items-center justify-center rounded-full bg-blue-400" title="Editar">
-               <Pencil size={16} />
-             </button>
-           </Link>*/}
 
-           <FormModal table="consulta" type="update" id={item.id}/>
-
-           <Link href={`/list/pacients/${item.id}`}>
-             <button className="p-2 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95 bg-ciano text-white hover:bg-ciano/90 shadow-sm" title="Descarregar PDF">
-               <Download size={16} />
-             </button>
-           </Link>
-           
-           <FormModal table="consulta" type="delete" id={item.id}/>
-           {/*
-            <button className="w-7 h-7 flex items-center justify-center rounded-full bg-red-500" title="Eliminar">
-               <Trash size={16} />
-            </button>
-           */}
+          <FormModal table="consulta" type="update" data={item}/>
+          {item.statusId === 3 && (
+            <Link href={`/list/pacients/${item.id}`}>
+              <button className="p-2 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95 bg-ciano text-white hover:bg-ciano/90 shadow-sm" title="Descarregar PDF">
+                <Download size={16} />
+              </button>
+            </Link>
+          )}
+          <FormModal table="consulta" type="delete" id={item.id}/>          
          </div>
        </td>
-     </tr>
+      </tr>
 );
 
-const AppointmentListPage = async ({searchParams}:{ searchParams: { [key: string]: string | undefined)} => {
+const AppointmentListPage = async ({searchParams}:{ searchParams: { [key: string]: string | undefined}}) => {
+  const {userId} = auth();
 
   const {page, ...queryParams} = searchParams;
   const p = page ? parseInt(page) : 1;
 
-  //URL PARAMS CONDITIONs
+  //URL PARAMS CONDITION
 
-  const query: Prisma.AppointmentWhereInput= {};
-  
-  if (queryParams) {
-    for (const [key, value] of Object.entries(queryParams)) {
-      if (value !== undefined) {
+  const query: Prisma.AppointmentWhereInput = {
+    userId: userId!, // 🔥 essencial
+  };
+    
+    if (queryParams) {
+      const filters: Prisma.AppointmentWhereInput[] = [];
+    
+      for (const [key, value] of Object.entries(queryParams)) {
+        if (!value) continue;
+    
         switch (key) {
           case "patient":
-            query.status = {
-              some: {
-                statusId: parseInt(value),
+            filters.push({
+              patientId: parseInt(value),
+            });
+            break;
+    
+          case "status":
+            filters.push({
+              statusId: parseInt(value),
+            });
+            break;
+    
+          case "type":
+            if (isTipo(value)) {
+              filters.push({
+                type: value,
+              });
+            }
+            break;
+
+          case "search": {
+            const searchFilters: Prisma.AppointmentWhereInput[] = [
+              {
+                patient: {
+                  name: {
+                    contains: value,
+                    mode: "insensitive",
+                  },
+                },
               },
-            };
+              {
+                status: {
+                  name: {
+                    contains: value,
+                    mode: "insensitive",
+                  },
+                },
+              },
+            ];
+
+            if (isTipo(value)) {
+              searchFilters.push({
+                type: value,
+              });
+            }
+
+            filters.push({ OR: searchFilters });
             break;
-          case "search":
-            query.name = { contains: value, mode: "insensitive" };
-            break;
-          default:
-            query.OR = [
-              { appointment: { datetime: { contains: value, mode: "insensitive" } } },
-              { patient: { nome: { contains: value, mode: "insensitive" } } },
-              { appointment: { type: { contains: value, mode: "insensitive" } } },
-              { status: { name: { contains: value, mode: "insensitive" } } },
-            ];         
-            break;
+          }
         }
       }
+    
+      // junta tudo com AND
+      if (filters.length > 0) {
+        query.AND = filters;
+      }
     }
-  }
   
   {/*console.log(searchParams)*/}
-   const [data, count] = await prisma.§transaction([
+   const [data, count] = await prisma.$transaction([
     prisma.appointment.findMany ({
      where: query,
       include:{
-         patient: {select: { nome: true } },
-         status: {select: { nome: true } },
+         patient: {select: { id: true, name: true } },
+         status: {select: { id:true,  name: true } },
       },
-    take:ITEM_PER_PAGE,
-    skip:ITEM_PER_PAGE * (p - 1),
-   });
-    prisma.appointment.count(),
+      take:ITEM_PER_PAGE,
+      skip:ITEM_PER_PAGE * (p - 1),
+      orderBy: {
+        date: "desc",
+      },
+    }),
+    prisma.appointment.count({ where: query }),
   ]);
-  const count = await prisma.appointment.count({ where: query });
+
   // console.log(data)
     
    return (
-     <div className="bg-white rounded-md flex-1 m-4 mt-0">
+     <div className="bg-white rounded-md flex-1 m-4 mt-4">
        {/* TOP */}
        <div className="flex items-center justify-between p-4">
          <h1 className="hidden md:block text-lg font-semibold">Todas as Consultas</h1>
          <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
            <TableSearch />
            <div className="flex items-center gap-4 self-end">
-             <button className="p-2 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95 bg-ciano text-white hover:bg-ciano/90 shadow-sm" title="Filtrar">
-               <SlidersHorizontal size={14} />
-             </button>
-             <button className="p-2 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95 bg-ciano text-white hover:bg-ciano/90 shadow-sm" title="Ordenar">
-               <ArrowDownWideNarrow width={14} height={14} />
-             </button>
-             {/*
-               //  <button className="w-8 h-8 flex items-center justify-center rounded-full bg-turquesaescuro" title="Agendar Consulta">
-               //    <ClipboardClock width={14} height={14} />
-               //  </button>
-             */}
-             {/* <button className="w-8 h-8 flex items-center justify-center rounded-full bg-turquesaescuro" title="Adicionar Consulta">
-               <Plus width={14} height={14} />
-             </button> */}
+            {role === "med-pro" && (
+              <>
+                <button className="p-2 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95 bg-ciano text-white hover:bg-ciano/90 shadow-sm" title="Filtrar">
+                  <SlidersHorizontal size={14} />
+                </button>
+                <button className="p-2 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95 bg-ciano text-white hover:bg-ciano/90 shadow-sm" title="Ordenar">
+                  <ArrowDownWideNarrow width={14} height={14} />
+                </button>
+                <button className="w-8 h-8 flex items-center justify-center rounded-full bg-turquesaescuro" title="Agendar Consulta">
+                  <ClipboardClock width={14} height={14} />
+                </button>
+              </>
+            )}
              <FormModal table="consulta" type="create"/>
            </div>
          </div>

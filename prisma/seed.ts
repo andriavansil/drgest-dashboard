@@ -59,7 +59,7 @@ async function main() {
         email: faker.internet.email(),
         contact: faker.phone.number({ style: 'international' }),
         birthday: faker.date.birthdate({ min: 18, max: 90, mode: 'age' }),
-        sex: faker.helpers.arrayElement(['MASCULINO', 'FEMENINO']),
+        sex: faker.helpers.arrayElement(['MASCULINO', 'FEMININO']),
         address: faker.location.city(),
         medicalHistory: faker.lorem.sentence(),
         medications: faker.lorem.words(3),

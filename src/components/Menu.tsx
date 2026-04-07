@@ -1,15 +1,18 @@
-import { role } from "@/lib/data";
+"use client";
+
 import Link from "next/link";
-import {LayoutDashboard,Users,History,BookOpen,School,ClipboardList,FileText,Calendar,Bell,CircleUserRound ,Settings, LogOut, CircleQuestionMark} from "lucide-react";
+import { LayoutDashboard, Users, History, BookOpen, School, ClipboardList, FileText, Calendar, Bell, CircleUserRound, Settings, LogOut, CircleQuestionMark } from "lucide-react";
+import { useUser, useClerk } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 
 const menuItems = [
   {
     title: "MENU",
     items: [
       {
-        icon: LayoutDashboard ,
+        icon: LayoutDashboard,
         label: "Dashboard",
-        href: "/med-pro",
+        href: "/med",
         visible: ["med", "med-pro"],
       },
       {
@@ -56,7 +59,7 @@ const menuItems = [
       {
         icon: CircleUserRound,
         label: "Profile",
-        href: "/profile",
+        href: "/user-profile",        
         visible: ["med", "med-pro"],
       },
       {
@@ -80,14 +83,20 @@ const menuItems = [
       {
         icon: LogOut,
         label: "Sair",
-        href: "/logout",
+        action: "logout",
         visible: ["med", "med-pro"],
       },
     ],
   },
 ];
 
+
 const Menu = () => {
+  const { user } = useUser();
+  const role = user?.publicMetadata?.role as string;
+  const { signOut } = useClerk();
+  const router = useRouter();
+
   return (
     <div className="mt-4 text-xs overflow-y-auto h-[90%] no-scrollbar">
       {menuItems.map((i) => (
@@ -99,16 +108,32 @@ const Menu = () => {
             if (item.visible.includes(role)) {
               const Icon = item.icon;
 
-              return (
-                <Link
-                  href={item.href}
-                  key={item.label}
-                  className="flex items-center justify-center lg:justify-start gap-4 text-gray-500 py-2 md:px-2 rounded-md hover:bg-SkyLight"
-                >
-                  <Icon size={20} />
-                  <span className="hidden lg:block">{item.label}</span>
-                </Link>
-              );
+              if (item.action === "logout") {
+                return (
+                  <button
+                    key={item.label}
+                      onClick={async () => {
+                        await signOut();
+                        router.push("/");
+                      }}
+                    className="flex items-center justify-center lg:justify-start gap-4 text-gray-500 py-2 md:px-2 rounded-md hover:bg-SkyLight"
+                  >
+                    <Icon size={20} />
+                    <span className="hidden lg:block">{item.label}</span>
+                  </button>
+                );
+              } else {
+                return (
+                  <Link
+                    href={item.href? item.href : "#"}
+                    key={item.label}
+                    className="flex items-center justify-center lg:justify-start gap-4 text-gray-500 py-2 md:px-2 rounded-md hover:bg-SkyLight"
+                  >
+                    <Icon size={20} />
+                    <span className="hidden lg:block">{item.label}</span>
+                  </Link>
+                );
+              }
             }
           })}
         </div>

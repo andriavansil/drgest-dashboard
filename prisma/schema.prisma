@@ -120,7 +120,7 @@ model SyncLog {
   action   String
   entityType String
   entityId  String
-  syncStatus String
+  syncStatus Boolean
   createdAt  DateTime @default(now())
   syncedAt  DateTime?
   statusId  Int
@@ -192,7 +192,7 @@ model Permission {
 
 enum Sexo {
   MASCULINO
-  FEMENINO
+  FEMININO
 }
 
 enum Tipo {

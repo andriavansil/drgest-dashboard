@@ -1,8 +1,8 @@
 -- CreateEnum
-CREATE TYPE "Sexo" AS ENUM ('Masculino', 'Femenino');
+CREATE TYPE "Sexo" AS ENUM ('MASCULINO', 'FEMININO');
 
 -- CreateEnum
-CREATE TYPE "Tipo" AS ENUM ('Consultório', 'Domicílio');
+CREATE TYPE "Tipo" AS ENUM ('CONSULTORIO', 'DOMICILIO');
 
 -- CreateTable
 CREATE TABLE "User" (
@@ -98,7 +98,7 @@ CREATE TABLE "SyncLog" (
     "action" TEXT NOT NULL,
     "entityType" TEXT NOT NULL,
     "entityId" TEXT NOT NULL,
-    "syncStatus" TEXT NOT NULL,
+    "syncStatus" BOOLEAN NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "syncedAt" TIMESTAMP(3),
     "statusId" INTEGER NOT NULL,
@@ -164,6 +164,9 @@ CREATE TABLE "Permission" (
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Status_name_key" ON "Status"("name");
 
 -- AddForeignKey
 ALTER TABLE "User" ADD CONSTRAINT "User_statusId_fkey" FOREIGN KEY ("statusId") REFERENCES "Status"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

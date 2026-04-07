@@ -2,21 +2,15 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import InputField from "../InputField";
 import { UserPlus, X, AlertCircle } from "lucide-react";
-
-const schema = z.object({
-  nome: z.string().min(1, { message: "O nome é obrigatório!" }),
-  dataNascimento: z.string().min(1, { message: "Data de nascimento é obrigatória!" }),
-  telemovel: z.string().min(1, { message: "Telemóvel é obrigatório!" }),
-  morada: z.string().optional(),
-  genero: z.enum(["masculino", "femenino"], { message: "Género é obrigatório!" }),
-  antecedentes: z.string().optional(),
-  observacoes: z.string().optional(),
-});
-
-type Inputs = z.infer<typeof schema>;
+import { patientSchema } from "../../lib/formValidationSchemas";
+import { createPatient, updatePatient } from "@/lib/actions";
+import { useFormState } from "react-dom";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { toast } from "react-toastify";
+import { z } from "zod";
 
 const PacientForm = ({
   type,
@@ -31,25 +25,29 @@ const PacientForm = ({
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<Inputs>({
-    resolver: zodResolver(schema),
-    defaultValues: {
-      nome: data?.nome || "",
-      dataNascimento: data?.dataNascimento || "",
-      telemovel: data?.telemovel || "",
-      morada: data?.morada || "",
-      genero: data?.genero || "",
-      antecedentes: data?.antecedentes || "",
-      observacoes: data?.observacoes || "",
-    },
+  } = useForm<z.input<typeof patientSchema>>({
+    resolver: zodResolver(patientSchema),
+  });
+
+  const [state, formAction] = useFormState(type === "create" ? createPatient : updatePatient, {
+    success: false,
+    error: false,
   });
 
   const onSubmit = handleSubmit(async (data) => {
-    // Simular envio
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    console.log(data);
-    onClose?.();
+    const parsedData = patientSchema.parse(data);
+    formAction(parsedData);
   });
+
+  const router = useRouter();
+
+  useEffect(() => {
+    if (state.success) {
+      type === "create" ? toast.success("Paciente criado com sucesso!") : toast.success("Paciente atualizado com sucesso!");
+      onClose?.();
+      router.refresh();
+    }
+  }, [state, router]);
 
   return (
     <form className="flex flex-col gap-6" onSubmit={onSubmit}>
@@ -81,24 +79,47 @@ const PacientForm = ({
 
       {/* Campos do Formulário */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <InputField
-          label="Nome Completo"
-          name="nome"
-          defaultValue={data?.nome}
-          register={register}
-          error={errors?.nome}
-          required
-        />
         
+        <div className="flex flex-col gap-2 w-full md:col-span-2">
+          <label className="text-sm font-medium text-gray-700">Nome Completo</label>
+          <textarea
+            {...register("name")}
+            className="w-full px-4 py-2.5 rounded-lg border-2 border-gray-200 
+                       focus:border-ciano focus:ring-2 focus:ring-ciano/20 
+                       transition-all duration-200 outline-none resize-none
+                       hover:border-gray-300"
+            rows={1}
+            defaultValue={data?.name}
+            required
+          />
+          {errors.name?.message && (
+            <p className="text-xs text-red-500">{errors.name.message.toString()}</p>
+          )}
+        </div>
+
         <InputField
           label="Data de Nascimento"
-          name="dataNascimento"
+          name="birthday"
           type="date"
-          defaultValue={data?.dataNascimento}
+          defaultValue={
+            data?.birthday
+              ? new Date(data.birthday).toISOString().split("T")[0]
+              : ""
+          }
           register={register}
-          error={errors?.dataNascimento}
+          error={errors?.birthday}
           required
         />
+        {data && (
+          <InputField
+            label="Id"
+            name="id"
+            defaultValue={data?.id}
+            register={register}
+            error={errors?.id}
+            hidden
+          />
+        )}
         
         <div className="flex flex-col gap-2 w-full">
           <label className="text-sm font-medium text-gray-700">
@@ -110,12 +131,12 @@ const PacientForm = ({
                          focus:border-ciano focus:ring-2 focus:ring-ciano/20 
                          transition-all duration-200 outline-none appearance-none
                          bg-white cursor-pointer hover:border-gray-300"
-              {...register("genero")}
-              defaultValue={data?.genero}
+              {...register("sex")}
+              defaultValue={data?.sex}
             >
               <option value="">Selecione o género</option>
-              <option value="masculino">Masculino</option>
-              <option value="femenino">Feminino</option>
+              <option value="MASCULINO">Masculino</option>
+              <option value="FEMININO">Feminino</option>
             </select>
             <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
               <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -123,73 +144,89 @@ const PacientForm = ({
               </svg>
             </div>
           </div>
-          {errors.genero?.message && (
+          {errors.sex?.message && (
             <p className="text-xs text-red-500 flex items-center gap-1">
               <AlertCircle className="w-3 h-3" />
-              {errors.genero.message.toString()}
+              {errors.sex.message.toString()}
             </p>
           )}
         </div>
         
         <InputField
           label="Telemóvel"
-          name="telemovel"
-          defaultValue={data?.telemovel}
+          name="contact"
+          defaultValue={data?.contact}
           register={register}
-          error={errors?.telemovel}
+          error={errors?.contact}
           required
+        />
+        
+        <InputField
+          label="Email"
+          name="email"
+          type="email"
+          defaultValue={data?.email}
+          register={register}
+          error={errors?.email}
         />
         
         <div className="flex flex-col gap-2 w-full md:col-span-2">
           <label className="text-sm font-medium text-gray-700">Morada</label>
           <textarea
-            {...register("morada")}
+            {...register("address")}
             className="w-full px-4 py-2.5 rounded-lg border-2 border-gray-200 
                        focus:border-ciano focus:ring-2 focus:ring-ciano/20 
                        transition-all duration-200 outline-none resize-none
                        hover:border-gray-300"
             rows={1}
-            defaultValue={data?.morada}
+            defaultValue={data?.address}
           />
-          {errors.morada?.message && (
-            <p className="text-xs text-red-500">{errors.morada.message.toString()}</p>
+          {errors.address?.message && (
+            <p className="text-xs text-red-500">{errors.address.message.toString()}</p>
           )}
         </div>
         
         <div className="flex flex-col gap-2 w-full md:col-span-2">
           <label className="text-sm font-medium text-gray-700">Antecedentes</label>
           <textarea
-            {...register("antecedentes")}
+            {...register("medicalHistory")}
             className="w-full px-4 py-2.5 rounded-lg border-2 border-gray-200 
                        focus:border-ciano focus:ring-2 focus:ring-ciano/20 
                        transition-all duration-200 outline-none resize-none
                        hover:border-gray-300"
             rows={3}
-            defaultValue={data?.antecedentes}
+            defaultValue={data?.medicalHistory}
             placeholder="Doenças anteriores, alergias, histórico familiar..."
           />
-          {errors.antecedentes?.message && (
-            <p className="text-xs text-red-500">{errors.antecedentes.message.toString()}</p>
+          {errors.medicalHistory?.message && (
+            <p className="text-xs text-red-500">{errors.medicalHistory.message.toString()}</p>
           )}
         </div>
         
         <div className="flex flex-col gap-2 w-full md:col-span-2">
           <label className="text-sm font-medium text-gray-700">Observações</label>
           <textarea
-            {...register("observacoes")}
+            {...register("notes")}
             className="w-full px-4 py-2.5 rounded-lg border-2 border-gray-200 
                        focus:border-ciano focus:ring-2 focus:ring-ciano/20 
                        transition-all duration-200 outline-none resize-none
                        hover:border-gray-300"
             rows={3}
-            defaultValue={data?.observacoes}
+            defaultValue={data?.notes}
             placeholder="Observações adicionais sobre o paciente..."
           />
-          {errors.observacoes?.message && (
-            <p className="text-xs text-red-500">{errors.observacoes.message.toString()}</p>
+          {errors.notes?.message && (
+            <p className="text-xs text-red-500">{errors.notes.message.toString()}</p>
           )}
         </div>
       </div>
+
+      {state.error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg">
+          <p className="font-bold">Erro!</p>
+          <p>Ocorreu um erro ao {type === "create" ? "criar" : "atualizar"} o paciente.</p>
+        </div>
+      )}
 
       {/* Botões */}
       <div className="flex justify-end gap-3 pt-4">
@@ -197,7 +234,7 @@ const PacientForm = ({
           <button
             type="button"
             onClick={onClose}
-            className="px-6 py-2 rounded-lg border-2 border-gray-200 text-gray-700 
+            className="px-6 py-2 rounded  -lg border-2 border-gray-200 text-gray-700 
                        font-medium hover:bg-gray-50 hover:border-gray-300 
                        transition-all duration-200"
           >
@@ -205,7 +242,6 @@ const PacientForm = ({
           </button>
         )}
         <button
-          type="submit"
           disabled={isSubmitting}
           className="px-6 py-2 rounded-lg bg-ciano text-white font-medium
                      hover:bg-ciano/90 active:scale-95 
@@ -220,7 +256,7 @@ const PacientForm = ({
             </>
           ) : (
             <>
-              <span>{type === "create" ? "Adicionar Paciente" : "Salvar Alterações"}</span>
+              <span>{type === "create" ? "Adicionar Paciente" : "Guardar Alterações"}</span>
             </>
           )}
         </button>

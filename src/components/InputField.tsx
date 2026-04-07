@@ -1,5 +1,6 @@
-import { FieldError } from "react-hook-form";
+import { FieldError, FieldErrorsImpl, Merge } from "react-hook-form";
 import { AlertCircle } from "lucide-react";
+
 
 type InputFieldProps = {
   label: string;
@@ -7,9 +8,10 @@ type InputFieldProps = {
   register: any;
   name: string;
   defaultValue?: string;
-  error?: FieldError;
+  error?: FieldError | Merge<FieldError, FieldErrorsImpl<any>>;
   inputProps?: React.InputHTMLAttributes<HTMLInputElement>;
   required?: boolean;
+  hidden?: boolean;
 };
 
 const InputField = ({
@@ -21,9 +23,10 @@ const InputField = ({
   error,
   inputProps,
   required = false,
+  hidden = false,
 }: InputFieldProps) => {
   return (
-    <div className="flex flex-col gap-2 w-full group">
+    <div className={hidden ? "hidden" : "flex flex-col gap-2 w-full group"}>
       <label className="text-sm font-medium text-gray-700">
         {label}
         {required && <span className="text-red-500 ml-1">*</span>}
