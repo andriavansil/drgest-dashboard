@@ -3,7 +3,6 @@ import { auth } from "@clerk/nextjs/server";
 import BigCalendar from "./BigCalender";
 import { adjustScheduleToCurrentWeek } from '@/lib/utils';
 
-const { userId } = auth();
 const BigCalendarContainer = async ({
   type,
   id,
@@ -11,6 +10,7 @@ const BigCalendarContainer = async ({
   type: "id";
   id: string | number;
 }) => {
+  const { userId } = auth();
   const dataRes = await prisma.appointment.findMany({
     where: {
       userId: userId!,

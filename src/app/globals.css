@@ -103,6 +103,23 @@
   background-color: #fdf2fb !important;
 }
 
+.rbc-event:nth-child(9) {
+  background-color: #e2f8ff !important;
+}
+
+.rbc-event:nth-child(10) {
+  background-color: #fefce8 !important;
+}
+
+.rbc-event:nth-child(11) {
+  background-color: #f2f1ff !important;
+}
+
+.rbc-event:nth-child(12) {
+  background-color: #fdf2fb !important;
+}
+
+
 .rbc-event-label{
   color: gray !important;
   margin-bottom: 5px;

@@ -58,7 +58,7 @@ const menuItems = [
     items: [
       {
         icon: CircleUserRound,
-        label: "Profile",
+        label: "Conta",
         href: "/user-profile",        
         visible: ["med", "med-pro"],
       },

@@ -44,7 +44,7 @@ export const userSchema = z.object({
     email: z.string().email({ message: "Email inválido!" }),
     speciality: z.string().optional(),
     password: z.string().min(6, { message: "A senha deve ter pelo menos 6 caracteres!" }).optional().or(z.literal("")),
-    //role: z.enum(["med", "med-pro"], { message: "Função é obrigatória!" }),
+    role: z.enum(["med", "med-pro"], { message: "Função é obrigatória!" }),
     imagem: z.string().optional(),
   });
 

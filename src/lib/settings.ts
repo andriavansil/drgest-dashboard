@@ -11,4 +11,5 @@ export const  routeAccessMap: RouteAccessMap = {
   "/list/appointments": ["med", "med-pro"],
   "/list/history": ["med", "med-pro"],
   "/calendar(.*)": ["med", "med-pro"],
+  "/user-profile(.*)": ["med", "med-pro"],
 };

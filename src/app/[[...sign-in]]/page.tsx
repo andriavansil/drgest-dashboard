@@ -6,6 +6,7 @@ import * as SignUp from "@clerk/elements/sign-up";
 import { useUser } from "@clerk/nextjs";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { UserLock, MonitorSmartphone, WifiOff, Mail } from "lucide-react";
 import { useEffect, useState } from "react";
 
 const LoginPage = () => {
@@ -14,18 +15,19 @@ const LoginPage = () => {
   const [isSignUp, setIsSignUp] = useState(false);
 
   useEffect(() => {
-    if (isSignedIn && user) {
-      const role = user.publicMetadata?.role;
+    if (isLoaded && isSignedIn) {
+      const role = user?.publicMetadata?.role as string;
       if (role) {
+        console.log("Redirecionando para a rota do role:", role);
         router.push(`/${role}`);
       }
     }
-  }, [user, isSignedIn, router]);
+  }, [isLoaded, isSignedIn, user, router]);
 
   if (!isLoaded) {
     return (
-      <div className="h-screen flex items-center justify-center bg-gradient-to-br from-[#4fd1c5]/10 to-[#008080]/10">
-        <div className="text-[#0097b2] font-medium animate-pulse">A carregar...</div>
+      <div className="h-screen flex items-center justify-center p-8">
+        <div className="w-8 h-8 border-4 border-ciano/20 border-t-ciano rounded-full animate-spin" />
       </div>
     );
   }
@@ -40,40 +42,38 @@ const LoginPage = () => {
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-white/10 rounded-full blur-3xl"></div>
         
         <div className="relative z-10 flex flex-col justify-center items-center text-white p-12 text-center">
-          <div className="mb-8 animate-float">
-            <Image src="/logo.png" alt="Logo" width={100} height={100} className="brightness-0 invert" />
+          <div className="mb-6">
+            <Image src="/logo.png" alt="Logo" width={140} height={140} className="brightness-0 invert" />
           </div>
-          
-          <h1 className="text-4xl font-bold mb-4">Dr. Gest</h1>
-          
-          <div className="space-y-6 mt-8">
+                    
+          <div className="space-y-6 mt-6">
             <div className="flex items-center space-x-3 text-left bg-white/10 backdrop-blur-sm rounded-lg p-4">
-              <div className="text-2xl">🏥</div>
+              <div className="text-2xl"><UserLock /></div>
               <div>
-                <h3 className="font-semibold">Gestão Hospitalar</h3>
-                <p className="text-sm opacity-90">Complete solution for medical institutions</p>
+                <h3 className="font-semibold">Privacidade Garantida</h3>
+                <p className="text-sm opacity-90">Os seus dados e dos seus pacientes são confidenciais e nunca partilhados.</p>
               </div>
             </div>
             
             <div className="flex items-center space-x-3 text-left bg-white/10 backdrop-blur-sm rounded-lg p-4">
-              <div className="text-2xl">👨‍⚕️</div>
+              <div className="text-2xl"><MonitorSmartphone /></div>
               <div>
-                <h3 className="font-semibold">Equipa Especializada</h3>
-                <p className="text-sm opacity-90">Connect with top medical professionals</p>
+                <h3 className="font-semibold">Multiplataforma</h3>
+                <p className="text-sm opacity-90">Aceda ao seu perfil em qualquer dispositivo</p>
               </div>
             </div>
             
-            <div className="flex items-center space-x-3 text-left bg-white/10 backdrop-blur-sm rounded-lg p-4">
-              <div className="text-2xl">📊</div>
+            {/*<div className="flex items-center space-x-3 text-left bg-white/10 backdrop-blur-sm rounded-lg p-4">
+              <div className="text-2xl"><WifiOff /></div>
               <div>
-                <h3 className="font-semibold">Análise Avançada</h3>
-                <p className="text-sm opacity-90">Data-driven insights for better decisions</p>
+                <h3 className="font-semibold">Funciona Offline</h3>
+                <p className="text-sm opacity-90">Aceda aos seus dados em qualquer lugar, mesmo sem ligação à internet</p>
               </div>
-            </div>
+            </div>*/}
           </div>
           
           <div className="mt-12 text-sm opacity-80">
-            <p>© 2024 Dr. Gest. All rights reserved.</p>
+            <p>© 2026 Dr. Gest. All rights reserved.</p>
           </div>
         </div>
       </div>
@@ -84,13 +84,13 @@ const LoginPage = () => {
           <SignIn.Root>
             <SignIn.Step
               name="start"
-              className="bg-white rounded-2xl shadow-2xl flex flex-col gap-5 w-full max-w-md p-6 sm:p-8 md:p-10 transition-all duration-300 hover:shadow-3xl"
+              className=" flex flex-col gap-5 w-full max-w-md p-6 sm:p-8 md:p-10 transition-all duration-300 hover:shadow-3xl"
             >
               <div className="flex flex-col items-center gap-3">
                 <div className="lg:hidden">
                   <Image src="/logo.png" alt="Logo" width={48} height={48} />
                 </div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-[#008080] to-[#4fd1c5] bg-clip-text text-transparent">
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-[#4fd1c5] to-[#008080] bg-clip-text text-transparent">
                   Dr. Gest
                 </h1>
                 <p className="text-gray-500 text-center text-sm">Bem-vindo de volta!</p>
@@ -128,7 +128,7 @@ const LoginPage = () => {
               
               <SignIn.Action
                 submit
-                className="bg-gradient-to-r from-[#0097b2] to-[#4fd1c5] hover:from-[#008080] hover:to-[#27bac1] text-white font-semibold py-3 rounded-xl transition-all duration-200 transform hover:scale-[1.02]"
+                className="bg-gradient-to-r from-[#4fd1c5] to-[#0097b2] hover:from-[#27bac1] hover:to-[#008080] text-white font-semibold py-3 rounded-xl transition-all duration-200 transform hover:scale-[1.02]"
               >
                 Entrar
               </SignIn.Action>
@@ -148,13 +148,13 @@ const LoginPage = () => {
           <SignUp.Root>
             <SignUp.Step
               name="start"
-              className="bg-white rounded-2xl shadow-2xl flex flex-col gap-4 w-full max-w-md p-6 sm:p-8 md:p-10 max-h-[90vh] overflow-y-auto transition-all duration-300"
+              className="flex flex-col gap-4 w-full max-w-md p-6 sm:p-8 md:p-10 max-h-[90vh] overflow-y-auto transition-all duration-300"
             >
               <div className="flex flex-col items-center gap-2">
                 <div className="lg:hidden">
                   <Image src="/logo.png" alt="Logo" width={48} height={48} />
                 </div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-[#008080] to-[#4fd1c5] bg-clip-text text-transparent">
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-[#4fd1c5] to-[#008080] bg-clip-text text-transparent">
                   Dr. Gest
                 </h1>
               </div>
@@ -216,33 +216,37 @@ const LoginPage = () => {
                 <Clerk.FieldError className="text-xs text-red-400" />
               </Clerk.Field>
               
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-semibold text-gray-700">
-                  Especialidade
-                </label>
-                <select
-                  name="speciality"
-                  className="p-3 rounded-xl border-2 border-gray-200 focus:border-[#4fd1c5] focus:outline-none transition-all duration-200 bg-white"
-                  onChange={(e) => {
-                    const input = document.querySelector('[name="speciality"]') as HTMLInputElement;
-                    if (input) input.value = e.target.value;
-                  }}
-                >
-                  <option value="">Selecione uma especialidade</option>
-                  <option value="Cardiologia">Cardiologia</option>
-                  <option value="Dermatologia">Dermatologia</option>
-                  <option value="Neurologia">Neurologia</option>
-                  <option value="Pediatria">Pediatria</option>
-                  <option value="Ortopedia">Ortopedia</option>
-                  <option value="Ginecologia">Ginecologia</option>
-                  <option value="Psiquiatria">Psiquiatria</option>
-                  <option value="Oftalmologia">Oftalmologia</option>
-                </select>
-              </div>
+              {/* Campo de Especialidade como INPUT */}
+                  <div className="flex flex-col gap-2">
+                    <label className="text-xs font-semibold text-gray-600">
+                      Especialidade
+                    </label>
+                    <input
+                      type="text"
+                      id="speciality"
+                      name="speciality"
+                      placeholder="Ex: Cardiologia, Pediatria, Neurologia..."
+                      className="p-3 rounded-md ring-1 ring-gray-300 focus:ring-[#00dffc] focus:outline-none"
+                      onChange={(e) => {
+                        // Guarda o valor da especialidade no campo hidden para o Clerk
+                        const specialityInput = document.getElementById('speciality-value') as HTMLInputElement;
+                        if (specialityInput) specialityInput.value = e.target.value;
+                      }}
+                    />
+                    {/* Campo hidden para enviar a especialidade como public metadata */}
+                    <input 
+                      type="hidden" 
+                      id="speciality-value" 
+                      name="publicMetadata.speciality" 
+                    />
+                  </div>
+                  
+                  {/* Campo hidden para a role */}
+                  <input type="hidden" name="publicMetadata.role" value="med" />
               
               <SignUp.Action
                 submit
-                className="bg-gradient-to-r from-[#0097b2] to-[#4fd1c5] hover:from-[#008080] hover:to-[#27bac1] text-white font-semibold py-3 rounded-xl transition-all duration-200 transform hover:scale-[1.02]"
+                className="bg-gradient-to-r from-[#0097b2] to-[#4fd1c5] hover:from-[#27bac1] hover:to-[#008080] text-white font-semibold py-3 rounded-xl transition-all duration-200 transform hover:scale-[1.02]"
               >
                 Registar
               </SignUp.Action>
@@ -259,12 +263,12 @@ const LoginPage = () => {
             </SignUp.Step>
             
             <SignUp.Step
-              name="continue"
-              className="bg-white rounded-2xl shadow-2xl flex flex-col gap-5 w-full max-w-md p-6 sm:p-8 md:p-10"
+              name="verifications"
+              className="flex flex-col gap-5 w-full max-w-md p-6 sm:p-8 md:p-10"
             >
               <div className="text-center">
-                <div className="text-6xl mb-4">📧</div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-[#008080] to-[#4fd1c5] bg-clip-text text-transparent mb-2">
+                <div className="text-6xl mb-4"><Mail /></div>
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-[#] to-[#4fd1c5008080] bg-clip-text text-transparent mb-2">
                   Verifique o seu email
                 </h1>
                 <p className="text-gray-600">
@@ -287,7 +291,7 @@ const LoginPage = () => {
               
               <SignUp.Action
                 submit
-                className="bg-gradient-to-r from-[#0097b2] to-[#4fd1c5] hover:from-[#008080] hover:to-[#27bac1] text-white font-semibold py-3 rounded-xl transition-all duration-200"
+                className="bg-gradient-to-r from-[#4fd1c5] to-[#0097b2] hover:from-[#008080] hover:to-[#27bac1] text-white font-semibold py-3 rounded-xl transition-all duration-200"
               >
                 Verificar
               </SignUp.Action>

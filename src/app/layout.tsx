@@ -4,6 +4,8 @@ import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { ptPT } from '@clerk/localizations';
+import type { LocalizationResource } from '@clerk/types';
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -18,8 +20,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
-      <html lang="en">
+    <ClerkProvider localization={ptPT as LocalizationResource}>
+      <html lang="pt-PT">
         <body className={inter.className}>{children} <ToastContainer position="bottom-right" theme="dark" /></body>
       </html>
     </ClerkProvider>

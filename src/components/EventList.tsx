@@ -22,6 +22,15 @@ const EventList = async ({ dateParam }: { dateParam: string | undefined }) => {
     },
   });
 
+  if (data.length === 0) {
+    return (
+      <div className="p-5 rounded-md border-2 border-gray-100 border-t-4 border-t-lamaSky">
+        <div className="flex items-center justify-between">
+          <h1 className="font-semibold text-gray-600">Sem consultas para este dia</h1>
+        </div>
+      </div>
+    );
+  }
   return data.map((event) => (
     <div
       className="p-5 rounded-md border-2 border-gray-100 border-t-4 odd:border-t-lamaSky even:border-t-lamaPurple"

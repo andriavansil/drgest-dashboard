@@ -4,6 +4,7 @@ import prisma from "./prisma";
 import { AppointmentSchema, PatientSchema, UserSchema } from "./formValidationSchemas";
 //import { revalidatePath } from "next/cache";
 import { auth, clerkClient } from "@clerk/nextjs/server";
+import { spec } from "node:test/reporters";
 
 type CurrentState = { success: boolean; error: boolean };
 
@@ -203,23 +204,45 @@ export const createUser = async (
         const user = await clerkClient.users.createUser({
             firstName: data.name.split(" ")[0],
             lastName: data.name.split(" ").slice(1).join(" "),
-            //emailAddress: data.email,
+            emailAddress: [data.email],
             password: data.password,
-            publicMetadata: {role: "med"},
+            publicMetadata: {role: "med", speciality: data.speciality},
         });
 
-        // await prisma.user.create({
-        //     data: {
-        //         name: data.name,
-        //         email: data.email,
-        //         speciality: data.speciality,
-        //         password: data.password,
-        //         role: data.role,
-        //         image: data.imagem? data.imagem : null,
-        //         createdAt: new Date(),
-        //         updatedAt: new Date(), // Define a data de atualização para a data atual
-        //     }
-        // });
+        // Verificar se o status "active" existe, se não, criar
+        let activeStatus = await prisma.status.findFirst({
+            where: { name: 'Ativo' }
+        });
+
+        if (!activeStatus) {
+            activeStatus = await prisma.status.create({
+            data: { name: 'Ativo' }
+            });
+
+            await prisma.status.create({
+                data: { name: 'Agendada' }
+            });
+            await prisma.status.create({
+                data: { name: 'Realizada' }
+            });
+            await prisma.status.create({
+                data: { name: 'Cancelada' }
+            });
+        }
+
+         await prisma.user.create({
+             data: {
+                 name: data.name,
+                 email: data.email,
+                 speciality: data.speciality,
+                 password: data.password || "cleck-managed",
+                 role: data.role,
+                 img: data.imagem? data.imagem : null,
+                 statusId: activeStatus.id,
+                 createdAt: new Date(),
+                 updatedAt: new Date(), // Define a data de atualização para a data atual
+             }
+         });
 
         return { success: true, error: false };
     } catch (error) {
@@ -227,10 +250,6 @@ export const createUser = async (
         return { success: false, error: true };
     }
 }; 
-
-//         return { success: false, error: true };
-//     }
-// }; 
 
 export const getPatientsForUser = async () => {
     try {

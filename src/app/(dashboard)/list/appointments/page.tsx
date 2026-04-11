@@ -15,8 +15,7 @@ type AppointmentList = Appointment & {
   status: { id: number; name: string };
 };
 
-  const { sessionClaims } = auth();
-  const role = (sessionClaims?.metadata as { role?: string })?.role;
+
 
  const columns = [
    {
@@ -50,23 +49,25 @@ const isTipo = (value: string | undefined): value is Tipo => {
   return !!value && Object.values(Tipo).includes(value as Tipo);
 };
 
-const renderRow = (item: AppointmentList) => (
-
+const renderRow = (item: AppointmentList) => {
+  const { sessionClaims } = auth();
+  const role = (sessionClaims?.metadata as { role?: string })?.role || "med";
+  return (
     <tr
-       key={item.id}
-       className="border-b border-gray-200 text-sm hover:bg-slate-50">
-       <td className="p-4">
-       {new Intl.DateTimeFormat("pt-PT", {
-          dateStyle: "short",
-          timeStyle: "short",
-        }).format(item.date)}
-       </td>
-       <td className="hidden md:table-cell p-4">{item.patient.name}</td>
-       <td className="hidden md:table-cell p-4"><span className={`badge ${item.type === 'CONSULTORIO' ? 'badge-office' : 'badge-home'}`}>{item.type}</span></td>
-       {/* <td className="hidden lg:table-cell p-4">{item.address}</td> */}
-       <td className="hidden lg:table-cell p-4">{item.status.name}</td>
-       <td>
-         <div className="flex items-center gap-2">
+      key={item.id}
+      className="border-b border-gray-200 text-sm hover:bg-slate-50">
+      <td className="p-4">
+      {new Intl.DateTimeFormat("pt-PT", {
+        dateStyle: "short",
+        timeStyle: "short",
+      }).format(item.date)}
+      </td>
+      <td className="hidden md:table-cell p-4">{item.patient.name}</td>
+      <td className="hidden md:table-cell p-4"><span className={`badge ${item.type === 'CONSULTORIO' ? 'badge-office' : 'badge-home'}`}>{item.type}</span></td>
+      {/* <td className="hidden lg:table-cell p-4">{item.address}</td> */}
+      <td className="hidden lg:table-cell p-4">{item.status.name}</td>
+      <td>
+        <div className="flex items-center gap-2">
           {role === "med-pro" && (
             <Link href={`/list/pacients/${item.id}`}>             
               <button className="p-2 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95 bg-ciano text-white hover:bg-ciano/90 shadow-sm" title="Ver Detalhes">
@@ -77,21 +78,23 @@ const renderRow = (item: AppointmentList) => (
 
           <FormModal table="consulta" type="update" data={item}/>
           {item.statusId === 3 && (
-            <Link href={`/list/pacients/${item.id}`}>
+            <Link href={`/api/pdf/appointment/${item.id}`} target="_blank" rel="noopener noreferrer">
               <button className="p-2 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95 bg-ciano text-white hover:bg-ciano/90 shadow-sm" title="Descarregar PDF">
                 <Download size={16} />
               </button>
             </Link>
           )}
           <FormModal table="consulta" type="delete" id={item.id}/>          
-         </div>
-       </td>
-      </tr>
-);
+        </div>
+      </td>
+    </tr>
+  );
+};
 
 const AppointmentListPage = async ({searchParams}:{ searchParams: { [key: string]: string | undefined}}) => {
   const {userId} = auth();
-
+  const { sessionClaims } = auth();
+  const role = (sessionClaims?.metadata as { role?: string })?.role;
   const {page, ...queryParams} = searchParams;
   const p = page ? parseInt(page) : 1;
 

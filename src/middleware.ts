@@ -9,7 +9,7 @@ const matchers = Object.keys(routeAccessMap).map((route) => ({
 
 console.log(matchers);
 
-export default clerkMiddleware((auth, req) => {
+export default clerkMiddleware(async (auth, req) => {
   // if (isProtectedRoute(req)) auth().protect()
 
   const { sessionClaims } = auth();
@@ -21,7 +21,17 @@ export default clerkMiddleware((auth, req) => {
       return NextResponse.redirect(new URL(`/${role}`, req.url));
     }
   }
+  // Se for uma rota pública, não faz nada
+  if (isPublicRoute(req)) {
+    return;
+  }
 });
+
+const isPublicRoute = createRouteMatcher([
+  '/sign-in(.*)',
+  '/sign-up(.*)',
+  '/api/webhooks(.*)'
+]);
 
 export const config = {
   matcher: [
