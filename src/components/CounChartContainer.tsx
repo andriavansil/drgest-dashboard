@@ -1,19 +1,14 @@
-import { auth } from "@clerk/nextjs/server";
 import CountChart from "./CountChart";
-import prisma from "@/lib/prisma";
 import Image from "next/image";
 
-const CountChartContainer = async () => {
-    const { userId } = auth();
-    const currentUserId = userId!; 
-  const data = await prisma.patient.groupBy({
-    where: {
-      userId: currentUserId,
-    },
-    by: ["sex"],
-    _count: true,
-  });
-
+const CountChartContainer = ({
+  data,
+}: {
+  data: {
+    sex: "MASCULINO" | "FEMININO" | string;
+    _count: number;
+  }[];
+}) => {
   const boys = data.find((d) => d.sex === "MASCULINO")?._count || 0;
   const girls = data.find((d) => d.sex === "FEMININO")?._count || 0;
 

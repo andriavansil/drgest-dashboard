@@ -3,7 +3,7 @@
 import prisma from "./prisma";
 import { AppointmentSchema, PatientSchema, UserSchema } from "./formValidationSchemas";
 //import { revalidatePath } from "next/cache";
-import { auth, clerkClient } from "@clerk/nextjs/server";
+import { auth, clerkClient as clerkClientFunction } from "@clerk/nextjs/server";
 import { spec } from "node:test/reporters";
 
 type CurrentState = { success: boolean; error: boolean };
@@ -201,6 +201,8 @@ export const createUser = async (
     data: UserSchema
 ) => {
     try {
+        const clerkClient = clerkClientFunction();
+
         const user = await clerkClient.users.createUser({
             firstName: data.name.split(" ")[0],
             lastName: data.name.split(" ").slice(1).join(" "),
@@ -276,6 +278,37 @@ export const getPatientsForUser = async () => {
     }
 };
 
+export async function getAppointmentsByDate(date: Date) {
+  const { userId } = auth();
+  if (!userId) {
+    throw new Error("Utilizador não autenticado.");
+  }
+
+  const startOfDay = new Date(date.setHours(0, 0, 0, 0));
+  const endOfDay = new Date(date.setHours(23, 59, 59, 999));
+
+  const appointments = await prisma.appointment.findMany({
+    where: {
+      userId: userId,
+      date: {
+        gte: startOfDay,
+        lte: endOfDay,
+      },
+    },
+    include: {
+      patient: {
+        select: {
+          name: true,
+        },
+      },
+    },
+    orderBy: {
+      date: 'asc'
+    }
+  });
+
+  return appointments;
+}
 
 // export const updateUser = async (
 //     currentState: CurrentState, 

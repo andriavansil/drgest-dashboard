@@ -1,28 +1,44 @@
-import prisma from "@/lib/prisma";
-import { auth } from "@clerk/nextjs/server";
+"use client";
 
-const EventList = async ({ dateParam }: { dateParam: string | undefined }) => {
-  const date = dateParam ? new Date(dateParam) : new Date();
-  const {userId} = auth();
+import { getAppointmentsByDate } from "@/lib/actions";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
-  const data = await prisma.appointment.findMany({
-    where: {
-      userId: userId!,
-      date: {
-        gte: new Date(date.setHours(0, 0, 0, 0)),
-        lte: new Date(date.setHours(23, 59, 59, 999)),
-      },
-    },
-    include: {
-      patient: {
-        select: {
-          name: true,
-        },
-      },
-    },
-  });
+type AppointmentWithPatient = {
+  id: number;
+  date: Date;
+  patient: { name: string };
+};
 
-  if (data.length === 0) {
+const EventList = () => {
+  const searchParams = useSearchParams();
+  const dateParam = searchParams.get("date");
+  const [data, setData] = useState<AppointmentWithPatient[] | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchEvents = async () => {
+      setLoading(true);
+      const date = dateParam ? new Date(dateParam) : new Date();
+      const appointments = await getAppointmentsByDate(date);
+      setData(appointments);
+      setLoading(false);
+    };
+
+    fetchEvents();
+  }, [dateParam]);
+
+  if (loading) {
+    return (
+      <div className="p-5 rounded-md border-2 border-gray-100">
+        <div className="flex items-center justify-center">
+          <div className="w-6 h-6 border-2 border-ciano/20 border-t-ciano rounded-full animate-spin" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!data || data.length === 0) {
     return (
       <div className="p-5 rounded-md border-2 border-gray-100 border-t-4 border-t-lamaSky">
         <div className="flex items-center justify-between">

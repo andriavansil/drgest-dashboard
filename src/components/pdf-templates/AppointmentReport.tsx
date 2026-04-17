@@ -167,10 +167,10 @@ const AppointmentReport = ({ appointment, user }: AppointmentReportProps) => {
 
             <div className="header">
                 <div className="title">
-                    RELATÓRIO DA CONSULTA
+                    FICHA DA CONSULTA
                 </div>
                 <h2>Dr. {user.firstName} {user.lastName}</h2>
-                <p>{user.publicMetadata.speciality || ""} · {user.email}</p>
+                <p>{user.publicMetadata.speciality + ' · ' || ""}{user.email}</p>
             </div>
 
             <div className="section">

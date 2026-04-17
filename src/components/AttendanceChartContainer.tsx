@@ -1,33 +1,17 @@
 import Image from "next/image";
-import prisma from "@/lib/prisma";
-import { auth } from "@clerk/nextjs/server";
 import AttendanceChart from "./attendanceCharts";
 
-const AttendanceChartContainer = async () => {
-  const {userId} = auth();
-  const currentUserId = userId!;
-  const today = new Date();
-  const dayOfWeek = today.getDay();
-  const daysSinceMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-
-  const lastMonday = new Date(today);
-
-  lastMonday.setDate(today.getDate() - daysSinceMonday);
-
-  const resData = await prisma.appointment.findMany({
-    where: {
-      date: {
-        gte: lastMonday,
-      },
-      userId: currentUserId,
-    },
-    select: {
-      date: true,
-      type: true,
-    },
-  });
-
-  // console.log(data)
+const AttendanceChartContainer = ({
+  data: resData,
+}: {
+  data: {
+    date: Date;
+    type: string | null;
+  }[];
+}) => {
+  if (!resData) {
+    return <div>A carregar dados do gráfico...</div>;
+  }
 
   const daysOfWeek = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
 

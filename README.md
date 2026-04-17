@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Med Management Dashboard
 
 ## Getting Started
@@ -20,3 +21,7 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 ## Learn More
 
+=======
+# DrGest-app
+Este projeto é uma aplicação web progressiva (PWA) e que funciona tanto online como offline.
+>>>>>>> 81f1ad0ad02df6814e312ee4fcbcf45a7962210a

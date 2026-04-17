@@ -28,7 +28,7 @@ const Navbar = ({ toggleMenu }: { toggleMenu: () => void }) => {
         </div>*/}
         <div className="flex flex-col">
           <span className="text-xs leading-3 font-medium">{user?.firstName} {user?.lastName}</span>
-          <span className="text-[10px] text-gray-500 text-right">{user?.publicMetadata?.speciality as string}</span>
+          <span className="text-[10px] text-gray-500 text-right">{user?.publicMetadata?.speciality as string || 'Sem especialidade'}</span>
         </div>
         <UserButton/>
       </div>

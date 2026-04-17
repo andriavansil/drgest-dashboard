@@ -87,7 +87,7 @@ const renderRow = (item: PatientList) => {
           
           <FormModal table="paciente" type="update" data={item}/>
           <Link href={`/api/pdf/patient/${item.id}`} target="_blank" rel="noopener noreferrer">
-            <button className="p-2 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95 bg-ciano text-white hover:bg-ciano/90 shadow-sm" title="Descarregar PDF">
+            <button className="p-2 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95 bg-turquesaescuro text-white hover:bg-turquesaescuro/90 shadow-sm" title="Descarregar PDF">
               <Download size={16} />
             </button>
           </Link>
@@ -98,7 +98,7 @@ const renderRow = (item: PatientList) => {
   );
 };
 
-const PacientListPage = async ({searchParams}:{ searchParams: { [key: string]: string | undefined}}) => {
+const PatientListPage = async ({searchParams}:{ searchParams: { [key: string]: string | undefined}}) => {
   const { sessionClaims } = auth();
   const role = (sessionClaims?.metadata as { role?: string })?.role || "med";
   const {userId} = auth();
@@ -217,4 +217,4 @@ const PacientListPage = async ({searchParams}:{ searchParams: { [key: string]: s
   )
 }
 
-export default PacientListPage
+export default PatientListPage

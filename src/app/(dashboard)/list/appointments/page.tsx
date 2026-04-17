@@ -79,7 +79,7 @@ const renderRow = (item: AppointmentList) => {
           <FormModal table="consulta" type="update" data={item}/>
           {item.statusId === 3 && (
             <Link href={`/api/pdf/appointment/${item.id}`} target="_blank" rel="noopener noreferrer">
-              <button className="p-2 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95 bg-ciano text-white hover:bg-ciano/90 shadow-sm" title="Descarregar PDF">
+              <button className="p-2 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95 bg-turquesaescuro text-white hover:bg-turquesaescuro/90 shadow-sm" title="Descarregar PDF">
                 <Download size={16} />
               </button>
             </Link>

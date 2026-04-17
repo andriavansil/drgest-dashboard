@@ -4,7 +4,7 @@ import os from "os";
 import path from "path";
 import puppeteer from "puppeteer";
 import prisma from "@/lib/prisma";
-import { auth, clerkClient } from "@clerk/nextjs/server";
+import { auth, clerkClient as clerkClientFunction } from "@clerk/nextjs/server";
 
 export const runtime = "nodejs";
 
@@ -24,7 +24,7 @@ export async function GET(
   }
 
   try {
-    console.log("Iniciando geração de PDF para patient ID:", patientId);
+    const clerkClient = clerkClientFunction();
 
     const [patient, user] = await Promise.all([
       prisma.patient.findUnique({
@@ -39,9 +39,6 @@ export async function GET(
       clerkClient.users.getUser(userId),
     ]);
 
-    console.log("patient encontrado:", !!patient);
-    console.log("User encontrado:", !!user);
-
     if (!patient) {
       return new NextResponse("Paciente não encontrado ou não tem permissão para o aceder", { status: 404 });
     }
@@ -54,16 +51,12 @@ export async function GET(
       publicMetadata: user.publicMetadata as { speciality?: string },
     };
 
-    console.log("Iniciando imports dinâmicos...");
-
     // Renderiza o componente React para uma string HTML usando imports dinâmicos
     const [{ default: PatientReport }, React, reactDomServer] = await Promise.all([
       import("@/components/pdf-templates/PatientReport"),
       import("react"),
       import("react-dom/server"),
     ]);
-
-    console.log("Imports dinâmicos concluídos");
 
     const html = reactDomServer.renderToStaticMarkup(
       React.createElement(PatientReport, {
@@ -72,10 +65,6 @@ export async function GET(
       })
     );
 
-    console.log("HTML gerado, tamanho:", html.length);
-
-    // Inicia o Puppeteer
-    console.log("Iniciando Puppeteer...");
     const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), "puppeteer_profile_"));
     let browser = null;
 
@@ -90,8 +79,6 @@ export async function GET(
       // Define o conteúdo da página e gera o PDF
       await page.setContent(html, { waitUntil: "networkidle0" });
       const pdfBuffer = await page.pdf({ format: "A4", printBackground: true });
-
-      console.log("PDF gerado com sucesso, tamanho:", pdfBuffer.length);
 
       return new NextResponse(Buffer.from(pdfBuffer), {
         headers: {

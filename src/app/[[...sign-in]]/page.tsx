@@ -6,26 +6,34 @@ import * as SignUp from "@clerk/elements/sign-up";
 import { useUser } from "@clerk/nextjs";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { UserLock, MonitorSmartphone, WifiOff, Mail } from "lucide-react";
+import { UserLock, MonitorSmartphone, WifiOff, Mail, Eye, EyeOff } from "lucide-react";
 import { useEffect, useState } from "react";
 
 const LoginPage = () => {
   const { isLoaded, isSignedIn, user } = useUser();
   const router = useRouter();
   const [isSignUp, setIsSignUp] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showSignUpPassword, setShowSignUpPassword] = useState(false);
 
   useEffect(() => {
     if (isLoaded && isSignedIn) {
       const role = user?.publicMetadata?.role as string;
       if (role) {
-        console.log("Redirecionando para a rota do role:", role);
+        setIsRedirecting(true);
         router.push(`/${role}`);
+      }
+      else {
+        console.warn("User is signed in but has no role defined. Redirecting to home.");
+        setIsRedirecting(true);
+        router.push(`/med`);
       }
     }
   }, [isLoaded, isSignedIn, user, router]);
 
   if (!isLoaded) {
-    return (
+    return ( // Manter o loader inicial enquanto o Clerk carrega
       <div className="h-screen flex items-center justify-center p-8">
         <div className="w-8 h-8 border-4 border-ciano/20 border-t-ciano rounded-full animate-spin" />
       </div>
@@ -33,6 +41,15 @@ const LoginPage = () => {
   }
 
   return (
+    <>
+      {isRedirecting && (
+        <div className="fixed inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-8 h-8 border-4 border-ciano/20 border-t-ciano rounded-full animate-spin" />
+            <p className="text-gray-600">A redirecionar...</p>
+          </div>
+        </div>
+      )}
     <div className="min-h-screen flex bg-gradient-to-br from-[#4fd1c5]/5 via-[#27bac1]/5 to-[#008080]/5">
       {/* Sidebar Panel - Hidden on mobile */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#4fd1c5] via-[#27bac1] to-[#008080] relative overflow-hidden">
@@ -117,12 +134,24 @@ const LoginPage = () => {
                 <Clerk.Label className="text-sm font-semibold text-gray-700">
                   Palavra-passe
                 </Clerk.Label>
-                <Clerk.Input
-                  type="password"
-                  required
-                  className="p-3 rounded-xl border-2 border-gray-200 focus:border-[#4fd1c5] focus:outline-none transition-all duration-200"
-                  placeholder="••••••••"
-                />
+
+                <div className="relative">
+                  <Clerk.Input
+                    type={showPassword ? "text" : "password"}
+                    required
+                    className="p-3 pr-10 rounded-xl border-2 border-gray-200 focus:border-[#4fd1c5] focus:outline-none transition-all duration-200 w-full"
+                    placeholder="••••••••"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+
                 <Clerk.FieldError className="text-xs text-red-400" />
               </Clerk.Field>
               
@@ -207,12 +236,24 @@ const LoginPage = () => {
                 <Clerk.Label className="text-sm font-semibold text-gray-700">
                   Palavra-passe
                 </Clerk.Label>
-                <Clerk.Input
-                  type="password"
-                  required
-                  className="p-3 rounded-xl border-2 border-gray-200 focus:border-[#4fd1c5] focus:outline-none transition-all duration-200"
-                  placeholder="••••••••"
-                />
+
+                <div className="relative">
+                  <Clerk.Input
+                    type={showSignUpPassword ? "text" : "password"}
+                    required
+                    className="p-3 pr-10 rounded-xl border-2 border-gray-200 focus:border-[#4fd1c5] focus:outline-none transition-all duration-200 w-full"
+                    placeholder="••••••••"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => setShowSignUpPassword(!showSignUpPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  >
+                    {showSignUpPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+
                 <Clerk.FieldError className="text-xs text-red-400" />
               </Clerk.Field>
               
@@ -264,31 +305,37 @@ const LoginPage = () => {
             
             <SignUp.Step
               name="verifications"
-              className="flex flex-col gap-5 w-full max-w-md p-6 sm:p-8 md:p-10"
+              className="flex flex-col gap-4 w-full max-w-md p-6 sm:p-8 md:p-10 max-h-[90vh] overflow-y-auto"
             >
-              <div className="text-center">
-                <div className="text-6xl mb-4"><Mail /></div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-[#] to-[#4fd1c5008080] bg-clip-text text-transparent mb-2">
+              <div className="text-center space-y-2">
+                <div className="text-4xl sm:text-5xl mb-2 flex justify-center">
+                  <Mail />
+                </div>
+
+                <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-[#4fd1c5] to-[#008080] bg-clip-text text-transparent">
                   Verifique o seu email
                 </h1>
-                <p className="text-gray-600">
+
+                <p className="text-sm text-gray-600">
                   Enviamos um código de verificação para o seu email.
                 </p>
               </div>
-              
+
               <Clerk.Field name="code" className="flex flex-col gap-2">
-                <Clerk.Label className="text-sm font-semibold text-gray-700">
+                <Clerk.Label className="text-sm font-semibold text-gray-700 text-center">
                   Código de Verificação
                 </Clerk.Label>
+
                 <Clerk.Input
                   type="text"
                   required
-                  className="p-3 rounded-xl border-2 border-gray-200 focus:border-[#4fd1c5] focus:outline-none transition-all duration-200 text-center text-2xl tracking-widest"
+                  className="p-3 rounded-xl border-2 border-gray-200 focus:border-[#4fd1c5] focus:outline-none transition-all duration-200 text-center text-xl sm:text-2xl tracking-widest"
                   placeholder="000000"
                 />
-                <Clerk.FieldError className="text-xs text-red-400" />
+
+                <Clerk.FieldError className="text-xs text-red-400 text-center" />
               </Clerk.Field>
-              
+
               <SignUp.Action
                 submit
                 className="bg-gradient-to-r from-[#4fd1c5] to-[#0097b2] hover:from-[#008080] hover:to-[#27bac1] text-white font-semibold py-3 rounded-xl transition-all duration-200"
@@ -300,16 +347,17 @@ const LoginPage = () => {
         )}
       </div>
 
-      <style jsx>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-10px); }
-        }
-        .animate-float {
-          animation: float 3s ease-in-out infinite;
-        }
-      `}</style>
-    </div>
+        <style jsx>{`
+          @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+          }
+          .animate-float {
+            animation: float 3s ease-in-out infinite;
+          }
+        `}</style>
+      </div>
+    </>
   );
 };
 

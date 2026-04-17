@@ -1,8 +1,6 @@
-version: '3.8'
-
 services:
-  postgress:
-    image: postgres:18
+  postgres:
+    image: postgres:15
     container_name: postgres_db
     environment:
       POSTGRES_USER: sa
@@ -12,16 +10,23 @@ services:
       - '5432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    
   app:
     build: .
     container_name: nextjs_app
     ports:
       - '3000:3000'
     environment:
-      - DATABASE_URL: postgresql://sa:services@localhost:5432/drgest
+      - DATABASE_URL: postgresql://sa:services@postgres:5432/drgest
     depends_on:
       - postgres
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.drgest.rule=Host(`drgest.app`)
+      - traefik.http.routers.drgest.entrypoints=websecure
+      - traefik.http.routers.drgest.tls.certresolver=letsencrypt
+      - traefik.http.services.drgest.loadbalancer.server.port=3000
+      - traefik.docker.network=app_default
+    restart: unless-stopped
 
 volumes:
   postgres_data:

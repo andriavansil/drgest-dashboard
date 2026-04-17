@@ -5,7 +5,7 @@ type RouteAccessMap = {
 };
 
 export const  routeAccessMap: RouteAccessMap = {
-  "/med(.*)": ["med"],
+  "/med(.*)": ["med", "med-pro"],
   "/med-pro(.*)": ["med-pro"],
   "/list/pacients": ["med", "med-pro"],
   "/list/appointments": ["med", "med-pro"],

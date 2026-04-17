@@ -18,7 +18,7 @@ const menuItems = [
       {
         icon: Users,
         label: "Pacientes",
-        href: "/list/pacients",
+        href: "/list/patients",
         visible: ["med", "med-pro"],
       },
       {

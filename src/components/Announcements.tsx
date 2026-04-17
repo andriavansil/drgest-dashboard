@@ -1,20 +1,12 @@
-import prisma from "@/lib/prisma";
-import { auth } from "@clerk/nextjs/server";
+import { AuditLog } from "@prisma/client";
 import Link from "next/link";
 
-const Announcements = async () => {
-
-  const {userId, sessionClaims} = auth();
-
-  const data = await prisma.auditLog.findMany({
-    where: {
-      userId: userId || undefined,
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-    take: 3,
-  });
+const Announcements = ({ data }: { data: AuditLog[] }) => {
+  if (!data || data.length === 0) {
+    return <div className="bg-white p-4 rounded-md">
+      <h1 className="text-xl font-semibold">Sem Atividades Recentes</h1>
+    </div>
+  }
 
   return (
     <div className="bg-white p-4 rounded-md">
@@ -28,7 +20,7 @@ const Announcements = async () => {
         {data[0] && (
           <div className="bg-SkyLight rounded-md p-4">
             <div className="flex items-center justify-between">
-              <h2 className="font-medium">{data[0].entityType}</h2>
+              <h2 className="font-medium">{data[0].entityType === 'Patient' ? 'Paciente' : 'Consulta' }</h2>
               <span className="text-xs text-gray-400 bg-white rounded-md px-1 py-1">
                 {new Intl.DateTimeFormat("pt-PT", {
                   year: "numeric",
@@ -43,7 +35,7 @@ const Announcements = async () => {
         {data[1] && (
           <div className="bg-SkyLight rounded-md p-4">
             <div className="flex items-center justify-between">
-              <h2 className="font-medium">{data[1].entityType}</h2>
+              <h2 className="font-medium">{data[1].entityType === 'Patient' ? 'Paciente' : 'Consulta' }</h2>
               <span className="text-xs text-gray-400 bg-white rounded-md px-1 py-1">
                 {new Intl.DateTimeFormat("pt-PT", {
                   year: "numeric",
@@ -58,7 +50,7 @@ const Announcements = async () => {
         {data[2] && (
           <div className="bg-SkyLight rounded-md p-4">
             <div className="flex items-center justify-between">
-              <h2 className="font-medium">{data[2].entityType}</h2>
+              <h2 className="font-medium">{data[2].entityType === 'Patient' ? 'Paciente' : 'Consulta' }</h2>
               <span className="text-xs text-gray-400 bg-white rounded-md px-1 py-1">
                 {new Intl.DateTimeFormat("pt-PT", {
                   year: "numeric",

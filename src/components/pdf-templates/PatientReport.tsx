@@ -168,7 +168,7 @@ const PatientReport = ({ patient, user }: PatientReportProps) => {
                     FICHA DO PACIENTE
                 </div>
                 <h2>Dr. {user.firstName} {user.lastName}</h2>
-                <p>{user.publicMetadata.speciality || ""} · {user.email}</p>
+                <p>{user.publicMetadata.speciality + ' · ' || ""}{user.email}</p>
             </div>
 
             <div className="section">

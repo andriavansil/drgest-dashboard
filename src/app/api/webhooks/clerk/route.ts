@@ -68,6 +68,18 @@ export async function POST(req: Request) {
         activeStatus = await prisma.status.create({
           data: { name: 'Ativo' }
         });
+
+        await prisma.status.create({
+          data: { name: 'Agendada' }
+        });
+
+        await prisma.status.create({
+          data: { name: 'Realizada' }
+        });
+
+        await prisma.status.create({
+          data: { name: 'Cancelada' }
+        });
       }
 
       // Criar usuário no banco de dados
