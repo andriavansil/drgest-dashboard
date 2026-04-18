@@ -16,7 +16,7 @@ services:
     ports:
       - '3000:3000'
     environment:
-      - DATABASE_URL: postgresql://sa:services@postgres:5432/drgest
+      DATABASE_URL: postgresql://sa:services@postgres:5432/drgest
     depends_on:
       - postgres
     labels:

@@ -13,7 +13,7 @@ const Announcements = ({ data }: { data: AuditLog[] }) => {
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Atividades Recentes</h1>
         <Link rel="stylesheet" href="/list/history">
-          <span className="text-xs text-gray-400">View All</span>
+          <span className="text-xs text-gray-400">Ver tudo</span>
         </Link>
       </div>
       <div className="flex flex-col gap-4 mt-4">
